@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import pl.edu.wit.todolist.entity.UserEntity;
+import pl.edu.wit.todolist.exception.UserAlreadyExistsException;
 import pl.edu.wit.todolist.exception.UserNotFoundException;
 import pl.edu.wit.todolist.repository.UserRepository;
 
@@ -18,6 +19,15 @@ public class UserService {
 
     @Transactional
     public UserEntity createUser(String email, String username, String password) {
+
+        if (userRepository.existsByUsername(username)) {
+            throw new UserAlreadyExistsException("Username already taken");
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new UserAlreadyExistsException("Email already taken");
+        }
+
         var userEntity = UserEntity.builder()
                 .username(username)
                 .email(email)

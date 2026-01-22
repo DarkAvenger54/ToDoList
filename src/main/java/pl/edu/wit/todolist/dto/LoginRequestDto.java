@@ -1,4 +1,8 @@
 package pl.edu.wit.todolist.dto;
 
-public record LoginRequestDto(String username, String password) {
-}
+import jakarta.validation.constraints.NotBlank;
+
+public record LoginRequestDto(
+        @NotBlank String login,
+        @NotBlank String password
+) {}

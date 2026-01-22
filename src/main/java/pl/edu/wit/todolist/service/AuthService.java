@@ -29,9 +29,9 @@ public class AuthService {
         return Keys.hmacShaKeyFor(jwtProperties.signKey().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateJwtToken(String username, String password) {
+    public String generateJwtToken(String login, String password) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
+                new UsernamePasswordAuthenticationToken(login, password)
         );
 
         Date now = new Date();
