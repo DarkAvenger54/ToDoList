@@ -46,6 +46,9 @@ public class UserEntity {
     @OneToMany(mappedBy = "addressee", cascade = CascadeType.REMOVE)
     private Set<FriendshipEntity> receivedRequests = new HashSet<>();
 
+    @Column(nullable = false)
+    private boolean emailVerified;
+
     @PrePersist
     @PreUpdate
     private void normalizeFields() {

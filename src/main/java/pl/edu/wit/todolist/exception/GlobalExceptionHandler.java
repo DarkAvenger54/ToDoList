@@ -9,7 +9,8 @@ import java.time.Instant;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler extends RuntimeException {
+public class GlobalExceptionHandler {
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, Object> handleUserAlreadyExists(UserAlreadyExistsException ex) {

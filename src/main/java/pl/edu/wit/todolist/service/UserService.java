@@ -37,6 +37,7 @@ public class UserService {
                 .username(normalizedUsername)
                 .email(normalizedEmail)
                 .password(passwordEncoder.encode(password))
+                .emailVerified(false)
                 .build();
 
         return userRepository.save(userEntity);
