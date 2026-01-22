@@ -16,6 +16,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    //Change name to loadUserByUsernameOrEmail
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
         var userEntity = userRepository.findByUsernameOrEmail(login, login)

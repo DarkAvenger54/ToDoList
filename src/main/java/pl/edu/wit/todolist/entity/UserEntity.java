@@ -45,4 +45,15 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "addressee", cascade = CascadeType.REMOVE)
     private Set<FriendshipEntity> receivedRequests = new HashSet<>();
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeFields() {
+        if (username != null) {
+            username = username.trim();
+        }
+        if (email != null) {
+            email = email.trim().toLowerCase();
+        }
+    }
 }
