@@ -2,11 +2,7 @@ package pl.edu.wit.todolist.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pl.edu.wit.todolist.dto.JwtResponseDto;
 import pl.edu.wit.todolist.dto.LoginRequestDto;
 import pl.edu.wit.todolist.dto.RegistrationRequestDto;

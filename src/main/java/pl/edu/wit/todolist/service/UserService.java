@@ -21,7 +21,7 @@ public class UserService {
         var userEntity = UserEntity.builder()
                 .username(username)
                 .email(email)
-                .password(passwordEncoder.encode(password)) // ВАЖНО: хешируем
+                .password(passwordEncoder.encode(password))
                 .build();
 
         return userRepository.save(userEntity);

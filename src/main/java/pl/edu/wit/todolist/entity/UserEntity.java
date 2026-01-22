@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Entity
 @Table(name = "users")
@@ -37,5 +40,9 @@ public class UserEntity {
     @Column(nullable = false)
     private String password;
 
+    @OneToMany(mappedBy = "requester", cascade = CascadeType.REMOVE)
+    private Set<FriendshipEntity> sentRequests = new HashSet<>();
 
+    @OneToMany(mappedBy = "addressee", cascade = CascadeType.REMOVE)
+    private Set<FriendshipEntity> receivedRequests = new HashSet<>();
 }
