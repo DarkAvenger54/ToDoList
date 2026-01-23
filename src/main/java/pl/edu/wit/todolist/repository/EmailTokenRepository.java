@@ -8,7 +8,6 @@ import pl.edu.wit.todolist.enums.EmailTokenType;
 import java.util.Optional;
 
 public interface EmailTokenRepository extends JpaRepository<EmailTokenEntity, Long> {
-    Optional<EmailTokenEntity> findByToken(String token);
-
+    Optional<EmailTokenEntity> findByTokenHash(String tokenHash);
     void deleteAllByUserAndType(UserEntity user, EmailTokenType type);
 }
