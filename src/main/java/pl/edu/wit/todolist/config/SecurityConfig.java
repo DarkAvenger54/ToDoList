@@ -44,7 +44,11 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/webjars/**"
+                                "/webjars/**",
+                                // === dev pages + static ===
+                                "/confirm-email", "/forgot-password", "/reset-password",
+                                "/confirm-email.html", "/forgot-password.html", "/reset-password.html",
+                                "/static/**", "/", "/index.html", "/favicon.ico"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

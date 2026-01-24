@@ -13,6 +13,7 @@ public class AccountService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final EmailConfirmationService emailConfirmationService;
+    private final PasswordResetService passwordResetService;
 
     @Transactional
     public UserEntity register(String email, String username, String password) {
@@ -29,5 +30,15 @@ public class AccountService {
     public void resendEmailConfirmation(String email) {
         userRepository.findByEmail(email)
                 .ifPresent(emailConfirmationService::sendConfirmationIfAllowed);
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        passwordResetService.startReset(email);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        passwordResetService.resetPassword(token, newPassword);
     }
 }

@@ -40,4 +40,16 @@ public class AuthController {
     public void resend(@Valid @RequestBody ResendConfirmationRequestDto dto) {
         accountService.resendEmailConfirmation(dto.email());
     }
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.OK)
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto dto) {
+        // must always be silent
+        accountService.forgotPassword(dto.email());
+    }
+
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetPassword(@Valid @RequestBody ResetPasswordRequestDto dto) {
+        accountService.resetPassword(dto.token(), dto.newPassword());
+    }
 }

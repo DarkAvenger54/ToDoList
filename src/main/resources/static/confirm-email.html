@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Confirm email — ToDoList</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+        .msg { padding: 14px; border-radius: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+<h2>Email confirmation</h2>
+<div id="msg" class="msg">Confirming...</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const msg = document.getElementById('msg');
+
+    if (!token) {
+        msg.textContent = "Missing token.";
+    } else {
+        fetch('/api/auth/confirm-email?token=' + encodeURIComponent(token))
+            .then(async (res) => {
+                if (res.ok) {
+                    msg.textContent = "Your email has been confirmed. You can now log in.";
+                } else {
+                    msg.textContent = "Confirmation link is invalid or expired. Please request a new confirmation email.";
+                }
+            })
+            .catch(() => {
+                msg.textContent = "Something went wrong. Please try again later.";
+            });
+    }
+</script>
+</body>
+</html>

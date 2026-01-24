@@ -1,6 +1,8 @@
 package pl.edu.wit.todolist.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,17 +20,19 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+
+    @Value("${app.base-url:http://localhost:8085}")
+    private String baseUrl;
 
     @Transactional
     public UserEntity createUser(String email, String username, String password) {
-
         String normalizedEmail = email.trim().toLowerCase();
         String normalizedUsername = username.trim();
 
         if (userRepository.existsByUsername(normalizedUsername)) {
             throw new UserAlreadyExistsException("Username already taken");
         }
-
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new UserAlreadyExistsException("Email already taken");
         }
@@ -48,6 +52,7 @@ public class UserService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
+
     @Transactional
     public void changePassword(Authentication auth, String oldPassword, String newPassword) {
         UserEntity user = userRepository.findByUsername(auth.getName())
@@ -56,12 +61,14 @@ public class UserService {
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new InvalidPasswordException("Old password is incorrect");
         }
-
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new InvalidPasswordException("New password must be different from old password");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+
+        String resetStartLink = baseUrl + "/api/auth/forgot-password";
+        emailService.sendPasswordChangedInfo(user.getEmail(), user.getUsername(), resetStartLink);
+
     }
 }
