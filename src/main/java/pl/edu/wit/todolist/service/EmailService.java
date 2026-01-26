@@ -70,4 +70,14 @@ public class EmailService {
             throw new IllegalStateException("Failed to send email", e);
         }
     }
+    public void sendNotificationEmail(String to, String subject, String title, String message) {
+        String html = templateService.render(
+                "emails/notification",
+                java.util.Map.of(
+                        "title", title,
+                        "message", message
+                )
+        );
+        sendHtml(to, subject, html);
+    }
 }

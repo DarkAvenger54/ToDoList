@@ -8,6 +8,7 @@ import pl.edu.wit.todolist.dto.FriendResponseDto;
 import pl.edu.wit.todolist.entity.FriendshipEntity;
 import pl.edu.wit.todolist.entity.UserEntity;
 import pl.edu.wit.todolist.enums.FriendshipStatus;
+import pl.edu.wit.todolist.enums.NotificationType;
 import pl.edu.wit.todolist.repository.FriendshipRepository;
 import pl.edu.wit.todolist.repository.UserRepository;
 
@@ -21,8 +22,8 @@ public class FriendshipService {
 
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    // SEND REQUEST
     public void sendRequest(Authentication auth, String targetUsername) {
 
         UserEntity requester = userRepository
@@ -51,6 +52,14 @@ public class FriendshipService {
                 .build();
 
         friendshipRepository.save(friendship);
+        notificationService.notifyUser(
+                addressee,
+                NotificationType.FRIEND_REQUEST_RECEIVED,
+                "Friend request",
+                "User " + requester.getUsername() + " sent you a friend request",
+                friendship.getId(),
+                true
+        );
     }
 
     // ACCEPT REQUEST
@@ -67,6 +76,17 @@ public class FriendshipService {
         }
 
         friendship.setStatus(FriendshipStatus.ACCEPTED);
+        UserEntity requester = friendship.getRequester();
+        UserEntity addressee = friendship.getAddressee();
+
+        notificationService.notifyUser(
+                requester,
+                NotificationType.FRIEND_REQUEST_ACCEPTED,
+                "Friend request accepted",
+                "User " + addressee.getUsername() + " accepted your friend request",
+                friendship.getId(),
+                true
+        );
     }
 
     // REMOVE FRIEND
