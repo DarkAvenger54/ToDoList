@@ -85,8 +85,11 @@ public class TaskService {
         if (dto.description() != null) t.setDescription(dto.description());
         if (dto.status() != null) t.setStatus(dto.status());
         if (dto.priority() != null) t.setPriority(dto.priority());
-        if (dto.dueAt() != null) t.setDueAt(dto.dueAt());
-
+        if (Boolean.TRUE.equals(dto.clearDueAt())) {
+            t.setDueAt(null);
+        } else if (dto.dueAt() != null) {
+            t.setDueAt(dto.dueAt());
+        }
         // updatedAt выставится в @PreUpdate
         return toDto(t);
     }
