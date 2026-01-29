@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ToDoList API Test UI</title>
+    <style>
+        body { font-family: system-ui, Arial; margin: 16px; }
+        h2 { margin-top: 28px; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+        .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin: 12px 0; }
+        label { display:block; font-size: 12px; opacity: 0.8; margin-top: 8px; }
+        input, textarea, select { width: 280px; max-width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
+        textarea { height: 70px; }
+        button { padding: 8px 12px; border: 1px solid #aaa; border-radius: 10px; background: #f7f7f7; cursor: pointer; }
+        button:hover { background:#eee; }
+        .small { font-size: 12px; opacity: .7; }
+        pre { background: #0b1020; color: #d7e0ff; padding: 12px; border-radius: 10px; overflow: auto; }
+        .ok { color: #1b7f2a; font-weight: 600; }
+        .bad { color: #b42318; font-weight: 700; }
+        .pill { display:inline-block; padding: 4px 8px; border-radius: 999px; border:1px solid #ddd; font-size: 12px; margin-left: 8px; }
+    </style>
+</head>
+<body>
+<h1>ToDoList API Test UI</h1>
+<div class="small">
+    JWT хранится в localStorage. Заголовок: <code>Authorization: Bearer &lt;jwt&gt;</code>
+    <span id="authState" class="pill">not logged</span>
+</div>
+
+<div class="card">
+    <h2>0) Настройки</h2>
+    <div class="row">
+        <div>
+            <label>API_BASE</label>
+            <input id="apiBase" value="http://localhost:8085" />
+        </div>
+        <div>
+            <label>JWT</label>
+            <input id="jwt" placeholder="will be stored here" />
+        </div>
+        <div>
+            <button onclick="loadJwt()">Load JWT</button>
+            <button onclick="saveJwt()">Save JWT</button>
+            <button onclick="clearJwt()">Clear JWT</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>1) Auth</h2>
+    <div class="row">
+        <div>
+            <label>Register: username</label>
+            <input id="regUsername" placeholder="john" />
+            <label>Register: email</label>
+            <input id="regEmail" placeholder="john@example.com" />
+            <label>Register: password</label>
+            <input id="regPassword" type="password" placeholder="secret123" />
+            <div style="margin-top:10px">
+                <button onclick="register()">POST /api/auth/register</button>
+            </div>
+        </div>
+
+        <div>
+            <label>Login: login (username or email)</label>
+            <input id="loginLogin" placeholder="john or john@example.com" />
+            <label>Login: password</label>
+            <input id="loginPassword" type="password" placeholder="secret123" />
+            <div style="margin-top:10px">
+                <button onclick="login()">POST /api/auth/login</button>
+            </div>
+
+            <hr style="margin:14px 0">
+
+            <label>Resend confirmation: email</label>
+            <input id="resendEmail" placeholder="john@example.com" />
+            <button onclick="resendConfirm()">POST /api/auth/resend-confirmation</button>
+
+            <hr style="margin:14px 0">
+
+            <label>Forgot password: email</label>
+            <input id="fpEmail" placeholder="john@example.com" />
+            <button onclick="forgotPassword()">POST /api/auth/forgot-password</button>
+
+            <label>Reset password: token</label>
+            <input id="rpToken" placeholder="paste token from email" />
+            <label>Reset password: newPassword</label>
+            <input id="rpNewPassword" type="password" placeholder="newSecret123" />
+            <button onclick="resetPassword()">POST /api/auth/reset-password</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>2) Personal Tasks</h2>
+    <div class="row">
+        <div>
+            <label>title</label>
+            <input id="tTitle" placeholder="Buy milk" />
+            <label>description</label>
+            <textarea id="tDesc" placeholder="optional"></textarea>
+            <label>priority</label>
+            <select id="tPriority">
+                <option value="">(null)</option>
+                <option>LOW</option>
+                <option selected>MEDIUM</option>
+                <option>HIGH</option>
+                <option>URGENT</option>
+            </select>
+            <label>dueAt (ISO LocalDateTime) e.g. 2026-01-27T18:00:00</label>
+            <input id="tDueAt" placeholder="optional" />
+            <div style="margin-top:10px">
+                <button onclick="createTask()">POST /api/tasks</button>
+            </div>
+        </div>
+
+        <div>
+            <label>List status</label>
+            <select id="listStatus">
+                <option value="">(all)</option>
+                <option>TODO</option>
+                <option>IN_PROGRESS</option>
+                <option>DONE</option>
+                <option>CANCELLED</option>
+            </select>
+            <label>page</label>
+            <input id="page" value="0" />
+            <label>size</label>
+            <input id="size" value="10" />
+            <div style="margin-top:10px">
+                <button onclick="listTasks()">GET /api/tasks</button>
+            </div>
+
+            <hr style="margin:14px 0">
+
+            <label>Task ID</label>
+            <input id="taskId" placeholder="e.g. 1" />
+            <button onclick="getTask()">GET /api/tasks/{id}</button>
+
+            <hr style="margin:14px 0">
+
+            <label>Update title</label>
+            <input id="uTitle" placeholder="optional" />
+            <label>Update description</label>
+            <textarea id="uDesc" placeholder="optional"></textarea>
+            <label>Update status</label>
+            <select id="uStatus">
+                <option value="">(null)</option>
+                <option>TODO</option>
+                <option>IN_PROGRESS</option>
+                <option>DONE</option>
+                <option>CANCELLED</option>
+            </select>
+            <label>Update priority</label>
+            <select id="uPriority">
+                <option value="">(null)</option>
+                <option>LOW</option>
+                <option>MEDIUM</option>
+                <option>HIGH</option>
+                <option>URGENT</option>
+            </select>
+            <label>Update dueAt (ISO) or leave empty</label>
+            <input id="uDueAt" placeholder="optional" />
+            <label>clearDueAt</label>
+            <select id="uClearDueAt">
+                <option value="">(null)</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+            </select>
+
+            <div style="margin-top:10px">
+                <button onclick="updateTask()">PUT /api/tasks/{id}</button>
+                <button onclick="deleteTask()">DELETE /api/tasks/{id}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>3) Friends</h2>
+    <div class="row">
+        <div>
+            <label>Target username</label>
+            <input id="frUsername" placeholder="friendUser" />
+            <button onclick="sendFriendRequest()">POST /api/friends/request</button>
+        </div>
+        <div>
+            <label>Friendship request id (to accept)</label>
+            <input id="frAcceptId" placeholder="id" />
+            <button onclick="acceptFriendRequest()">POST /api/friends/accept/{id}</button>
+        </div>
+        <div>
+            <label>Friendship id (to remove)</label>
+            <input id="frRemoveId" placeholder="id" />
+            <button onclick="removeFriend()">DELETE /api/friends/{id}</button>
+        </div>
+        <div>
+            <button onclick="listFriends()">GET /api/friends</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>4) Groups</h2>
+    <div class="row">
+        <div>
+            <label>Create group name</label>
+            <input id="gName" placeholder="My Group" />
+            <button onclick="createGroup()">POST /api/groups</button>
+
+            <hr style="margin:14px 0">
+
+            <button onclick="myGroups()">GET /api/groups</button>
+        </div>
+
+        <div>
+            <label>Group ID</label>
+            <input id="gId" placeholder="e.g. 1" />
+
+            <label>Rename group name</label>
+            <input id="gRename" placeholder="New name" />
+            <button onclick="renameGroup()">PUT /api/groups/{id}/name</button>
+
+            <hr style="margin:14px 0">
+
+            <button onclick="groupMembers()">GET /api/groups/{id}/members</button>
+
+            <label>Add member username</label>
+            <input id="gAddUser" placeholder="username" />
+            <button onclick="addMember()">POST /api/groups/{id}/members/{username}</button>
+
+            <hr style="margin:14px 0">
+
+            <label>Set role: username</label>
+            <input id="gRoleUser" placeholder="username" />
+            <label>Set role: role</label>
+            <select id="gRole">
+                <option>ADMIN</option>
+                <option selected>MEMBER</option>
+            </select>
+            <button onclick="setRole()">PUT /api/groups/{id}/role</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>5) Group Tasks</h2>
+    <div class="row">
+        <div>
+            <label>Group ID</label>
+            <input id="gtGroupId" placeholder="e.g. 1" />
+
+            <h3 style="margin-top:12px">Assign task to user (ADMIN/OWNER)</h3>
+            <label>assigneeUsername</label>
+            <input id="gtAssignee" placeholder="username" />
+            <label>title</label>
+            <input id="gtTitle" placeholder="Do something" />
+            <label>description</label>
+            <textarea id="gtDesc"></textarea>
+            <label>priority</label>
+            <select id="gtPriority">
+                <option value="">(null)</option>
+                <option>LOW</option>
+                <option selected>MEDIUM</option>
+                <option>HIGH</option>
+                <option>URGENT</option>
+            </select>
+            <label>dueAt (ISO)</label>
+            <input id="gtDueAt" placeholder="optional" />
+            <label>visibleInGroup</label>
+            <select id="gtVisible">
+                <option value="true" selected>true</option>
+                <option value="false">false</option>
+            </select>
+            <button onclick="assignGroupTask()">POST /api/groups/{id}/tasks/assign</button>
+        </div>
+
+        <div>
+            <h3>Create group task for all (ADMIN/OWNER)</h3>
+            <label>title</label>
+            <input id="gaTitle" placeholder="Group task" />
+            <label>description</label>
+            <textarea id="gaDesc"></textarea>
+            <label>priority</label>
+            <select id="gaPriority">
+                <option value="">(null)</option>
+                <option>LOW</option>
+                <option selected>MEDIUM</option>
+                <option>HIGH</option>
+                <option>URGENT</option>
+            </select>
+            <label>dueAt (ISO)</label>
+            <input id="gaDueAt" placeholder="optional" />
+            <button onclick="createForAll()">POST /api/groups/{id}/tasks/for-all</button>
+
+            <hr style="margin:14px 0">
+
+            <h3>Update groupTask status (ADMIN/OWNER)</h3>
+            <label>taskId</label>
+            <input id="gsTaskId" placeholder="taskId" />
+            <label>status</label>
+            <select id="gsStatus">
+                <option>TODO</option>
+                <option>IN_PROGRESS</option>
+                <option selected>DONE</option>
+                <option>CANCELLED</option>
+            </select>
+            <button onclick="setGroupTaskStatus()">POST /api/groups/{id}/tasks/{taskId}/status</button>
+
+            <hr style="margin:14px 0">
+
+            <h3>Lists (member)</h3>
+            <label>page</label>
+            <input id="gtPage" value="0" />
+            <label>size</label>
+            <input id="gtSize" value="10" />
+            <div style="margin-top:10px">
+                <button onclick="groupMine()">GET /api/groups/{id}/tasks/mine</button>
+                <button onclick="groupForAllList()">GET /api/groups/{id}/tasks/for-all/list</button>
+                <button onclick="groupVisible()">GET /api/groups/{id}/tasks/visible</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>6) Notifications</h2>
+    <div class="row">
+        <div>
+            <label>unreadOnly</label>
+            <select id="nUnreadOnly">
+                <option value="true" selected>true</option>
+                <option value="false">false</option>
+            </select>
+            <label>page</label>
+            <input id="nPage" value="0" />
+            <label>size</label>
+            <input id="nSize" value="10" />
+            <div style="margin-top:10px">
+                <button onclick="listNotifications()">GET /api/notifications</button>
+                <button onclick="unreadCount()">GET /api/notifications/unread-count</button>
+            </div>
+
+            <hr style="margin:14px 0">
+
+            <label>notificationId</label>
+            <input id="nId" placeholder="id" />
+            <button onclick="markRead()">POST /api/notifications/mark-read</button>
+            <button onclick="markAllRead()">POST /api/notifications/mark-all-read</button>
+        </div>
+    </div>
+</div>
+
+<h2>Response</h2>
+<div id="statusLine"></div>
+<pre id="out">{}</pre>
+
+<script>
+    function $(id){ return document.getElementById(id); }
+
+    function setAuthState() {
+        const jwt = $("jwt").value.trim();
+        $("authState").textContent = jwt ? "logged" : "not logged";
+        $("authState").style.borderColor = jwt ? "#1b7f2a" : "#ddd";
+    }
+
+    function loadJwt() {
+        $("jwt").value = localStorage.getItem("jwt") || "";
+        $("apiBase").value = localStorage.getItem("apiBase") || $("apiBase").value;
+        setAuthState();
+    }
+
+    function saveJwt() {
+        localStorage.setItem("jwt", $("jwt").value.trim());
+        localStorage.setItem("apiBase", $("apiBase").value.trim());
+        setAuthState();
+        ok("Saved");
+    }
+
+    function clearJwt() {
+        localStorage.removeItem("jwt");
+        $("jwt").value = "";
+        setAuthState();
+        ok("Cleared");
+    }
+
+    function apiBase() {
+        return $("apiBase").value.trim().replace(/\/+$/, "");
+    }
+
+    function authHeaders() {
+        const jwt = $("jwt").value.trim();
+        const h = { "Content-Type": "application/json" };
+        if (jwt) h["Authorization"] = "Bearer " + jwt;
+        return h;
+    }
+
+    async function request(method, path, body) {
+        const url = apiBase() + path;
+        const opts = { method, headers: authHeaders() };
+        if (body !== undefined) opts.body = JSON.stringify(body);
+
+        const res = await fetch(url, opts);
+        const text = await res.text();
+        let data;
+        try { data = text ? JSON.parse(text) : null; }
+        catch { data = text; }
+
+        const status = res.ok ? "OK" : "ERROR";
+        const line = `${method} ${path} -> ${res.status} ${status}`;
+        $("statusLine").innerHTML = res.ok
+            ? `<span class="ok">${line}</span>`
+            : `<span class="bad">${line}</span>`;
+
+        $("out").textContent = (typeof data === "string")
+            ? data
+            : JSON.stringify(data, null, 2);
+
+        if (!res.ok) throw new Error(line);
+        return data;
+    }
+
+    function ok(msg) {
+        $("statusLine").innerHTML = `<span class="ok">${msg}</span>`;
+    }
+
+    // ===== Auth =====
+    async function register() {
+        await request("POST", "/api/auth/register", {
+            username: $("regUsername").value.trim(),
+            email: $("regEmail").value.trim(),
+            password: $("regPassword").value
+        });
+    }
+
+    async function login() {
+        const data = await request("POST", "/api/auth/login", {
+            login: $("loginLogin").value.trim(),
+            password: $("loginPassword").value
+        });
+        $("jwt").value = data.jwtToken || "";
+        saveJwt();
+    }
+
+    async function resendConfirm() {
+        await request("POST", "/api/auth/resend-confirmation", { email: $("resendEmail").value.trim() });
+    }
+
+    async function forgotPassword() {
+        await request("POST", "/api/auth/forgot-password", { email: $("fpEmail").value.trim() });
+    }
+
+    async function resetPassword() {
+        await request("POST", "/api/auth/reset-password", {
+            token: $("rpToken").value.trim(),
+            newPassword: $("rpNewPassword").value
+        });
+    }
+
+    // ===== Personal tasks =====
+    async function createTask() {
+        const priority = $("tPriority").value || null;
+        const dueAt = $("tDueAt").value.trim() || null;
+        await request("POST", "/api/tasks", {
+            title: $("tTitle").value.trim(),
+            description: $("tDesc").value.trim() || null,
+            priority,
+            dueAt
+        });
+    }
+
+    async function listTasks() {
+        const status = $("listStatus").value;
+        const page = encodeURIComponent($("page").value.trim());
+        const size = encodeURIComponent($("size").value.trim());
+        const qs = new URLSearchParams();
+        if (status) qs.set("status", status);
+        if (page) qs.set("page", page);
+        if (size) qs.set("size", size);
+        await request("GET", "/api/tasks?" + qs.toString());
+    }
+
+    async function getTask() {
+        const id = $("taskId").value.trim();
+        await request("GET", `/api/tasks/${id}`);
+    }
+
+    async function updateTask() {
+        const id = $("taskId").value.trim();
+        const clearDueAtRaw = $("uClearDueAt").value;
+        const clearDueAt = clearDueAtRaw === "" ? null : (clearDueAtRaw === "true");
+        const dueAt = $("uDueAt").value.trim() || null;
+
+        await request("PUT", `/api/tasks/${id}`, {
+            title: $("uTitle").value.trim() || null,
+            description: $("uDesc").value.trim() || null,
+            status: $("uStatus").value || null,
+            priority: $("uPriority").value || null,
+            dueAt,
+            clearDueAt
+        });
+    }
+
+    async function deleteTask() {
+        const id = $("taskId").value.trim();
+        await request("DELETE", `/api/tasks/${id}`);
+    }
+
+    // ===== Friends =====
+    async function sendFriendRequest() {
+        await request("POST", "/api/friends/request", { username: $("frUsername").value.trim() });
+    }
+
+    async function acceptFriendRequest() {
+        const id = $("frAcceptId").value.trim();
+        await request("POST", `/api/friends/accept/${id}`);
+    }
+
+    async function removeFriend() {
+        const id = $("frRemoveId").value.trim();
+        await request("DELETE", `/api/friends/${id}`);
+    }
+
+    async function listFriends() {
+        await request("GET", "/api/friends");
+    }
+
+    // ===== Groups =====
+    async function createGroup() {
+        await request("POST", "/api/groups", { name: $("gName").value.trim() });
+    }
+
+    async function myGroups() {
+        await request("GET", "/api/groups");
+    }
+
+    async function renameGroup() {
+        const id = $("gId").value.trim();
+        await request("PUT", `/api/groups/${id}/name`, { name: $("gRename").value.trim() });
+    }
+
+    async function groupMembers() {
+        const id = $("gId").value.trim();
+        await request("GET", `/api/groups/${id}/members`);
+    }
+
+    async function addMember() {
+        const id = $("gId").value.trim();
+        const username = $("gAddUser").value.trim();
+        await request("POST", `/api/groups/${id}/members/${encodeURIComponent(username)}`);
+    }
+
+    async function setRole() {
+        const id = $("gId").value.trim();
+        await request("PUT", `/api/groups/${id}/role`, {
+            username: $("gRoleUser").value.trim(),
+            role: $("gRole").value
+        });
+    }
+
+    // ===== Group tasks =====
+    function gp() {
+        const groupId = $("gtGroupId").value.trim();
+        const page = $("gtPage").value.trim();
+        const size = $("gtSize").value.trim();
+        const qs = new URLSearchParams({ page, size });
+        return { groupId, qs: qs.toString() };
+    }
+
+    async function assignGroupTask() {
+        const groupId = $("gtGroupId").value.trim();
+        await request("POST", `/api/groups/${groupId}/tasks/assign`, {
+            assigneeUsername: $("gtAssignee").value.trim(),
+            title: $("gtTitle").value.trim(),
+            description: $("gtDesc").value.trim() || null,
+            priority: $("gtPriority").value || null,
+            dueAt: $("gtDueAt").value.trim() || null,
+            visibleInGroup: $("gtVisible").value === "true"
+        });
+    }
+
+    async function createForAll() {
+        const groupId = $("gtGroupId").value.trim();
+        await request("POST", `/api/groups/${groupId}/tasks/for-all`, {
+            title: $("gaTitle").value.trim(),
+            description: $("gaDesc").value.trim() || null,
+            priority: $("gaPriority").value || null,
+            dueAt: $("gaDueAt").value.trim() || null
+        });
+    }
+
+    async function setGroupTaskStatus() {
+        const groupId = $("gtGroupId").value.trim();
+        const taskId = $("gsTaskId").value.trim();
+        await request("POST", `/api/groups/${groupId}/tasks/${taskId}/status`, {
+            status: $("gsStatus").value
+        });
+    }
+
+    async function groupMine() {
+        const { groupId, qs } = gp();
+        await request("GET", `/api/groups/${groupId}/tasks/mine?${qs}`);
+    }
+
+    async function groupForAllList() {
+        const { groupId, qs } = gp();
+        await request("GET", `/api/groups/${groupId}/tasks/for-all/list?${qs}`);
+    }
+
+    async function groupVisible() {
+        const { groupId, qs } = gp();
+        await request("GET", `/api/groups/${groupId}/tasks/visible?${qs}`);
+    }
+
+    // ===== Notifications =====
+    async function listNotifications() {
+        const unreadOnly = $("nUnreadOnly").value;
+        const page = $("nPage").value.trim();
+        const size = $("nSize").value.trim();
+        const qs = new URLSearchParams({ unreadOnly, page, size });
+        await request("GET", `/api/notifications?${qs.toString()}`);
+    }
+
+    async function unreadCount() {
+        await request("GET", "/api/notifications/unread-count");
+    }
+
+    async function markRead() {
+        await request("POST", "/api/notifications/mark-read", {
+            notificationId: Number($("nId").value.trim())
+        });
+    }
+
+    async function markAllRead() {
+        await request("POST", "/api/notifications/mark-all-read");
+    }
+
+    // init
+    loadJwt();
+</script>
+</body>
+</html>

@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 // === dev pages + static ===
                                 "/confirm-email", "/forgot-password", "/reset-password",
                                 "/confirm-email.html", "/forgot-password.html", "/reset-password.html",
-                                "/static/**", "/", "/index.html", "/favicon.ico"
+                                "/static/**", "/", "/index.html", "/favicon.ico", "/test-ui.html"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -6,6 +6,7 @@ import pl.edu.wit.todolist.enums.TaskStatus;
 
 import java.time.LocalDateTime;
 
+
 public record TaskResponseDto(
         Long id,
         String title,
@@ -15,5 +16,13 @@ public record TaskResponseDto(
         TaskScope scope,
         LocalDateTime dueAt,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+
+        // NEW
+        String creatorDisplayName, // "you" или username создателя
+        Long groupId,
+        String groupName,
+        String assigneeUsername,   // кому назначено (для groupTask = null)
+        boolean groupTask,
+        boolean visibleInGroup
 ) {}

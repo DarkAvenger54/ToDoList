@@ -27,7 +27,11 @@ public class TaskService {
         return userRepository.findByUsername(auth.getName()).orElseThrow();
     }
 
-    private TaskResponseDto toDto(TaskEntity t) {
+    private TaskResponseDto toDto(TaskEntity t, String currentUsername) {
+        String creatorDisplay = (t.getCreator() != null && t.getCreator().getUsername().equals(currentUsername))
+                ? "you"
+                : (t.getCreator() != null ? t.getCreator().getUsername() : null);
+
         return new TaskResponseDto(
                 t.getId(),
                 t.getTitle(),
@@ -37,61 +41,80 @@ public class TaskService {
                 t.getScope(),
                 t.getDueAt(),
                 t.getCreatedAt(),
-                t.getUpdatedAt()
+                t.getUpdatedAt(),
+                creatorDisplay,
+                t.getGroup() != null ? t.getGroup().getId() : null,
+                t.getGroup() != null ? t.getGroup().getName() : null,
+                t.getOwner() != null ? t.getOwner().getUsername() : null,
+                t.isGroupTask(),
+                t.isVisibleInGroup()
         );
     }
 
     @Transactional
     public TaskResponseDto create(Authentication auth, TaskCreateRequestDto dto) {
         UserEntity user = currentUser(auth);
+        String currentUsername = auth.getName();
 
         TaskEntity task = TaskEntity.builder()
-                .owner(user)
+                .creator(user)
+                .owner(user) // personal task assigned to self
                 .title(dto.title())
                 .description(dto.description())
                 .priority(dto.priority())
                 .dueAt(dto.dueAt())
                 .scope(TaskScope.PERSONAL)
+                .group(null)
+                .groupTask(false)
+                .visibleInGroup(false)
                 .status(TaskStatus.TODO)
                 .build();
 
-        return toDto(taskRepository.save(task));
+        return toDto(taskRepository.save(task), currentUsername);
     }
 
     @Transactional(readOnly = true)
     public Page<TaskResponseDto> list(Authentication auth, TaskStatus status, Pageable pageable) {
         UserEntity user = currentUser(auth);
+        String currentUsername = auth.getName();
 
         Page<TaskEntity> page = (status == null)
                 ? taskRepository.findAllByOwnerAndScope(user, TaskScope.PERSONAL, pageable)
                 : taskRepository.findAllByOwnerAndScopeAndStatus(user, TaskScope.PERSONAL, status, pageable);
 
-        return page.map(this::toDto);
+        return page.map(t -> toDto(t, currentUsername));
     }
 
     @Transactional(readOnly = true)
     public TaskResponseDto get(Authentication auth, Long id) {
         UserEntity user = currentUser(auth);
+        String currentUsername = auth.getName();
+
         TaskEntity t = taskRepository.findByIdAndOwner(id, user).orElseThrow();
-        return toDto(t);
+        return toDto(t, currentUsername);
     }
 
     @Transactional
     public TaskResponseDto update(Authentication auth, Long id, TaskUpdateRequestDto dto) {
         UserEntity user = currentUser(auth);
+        String currentUsername = auth.getName();
+
         TaskEntity t = taskRepository.findByIdAndOwner(id, user).orElseThrow();
 
         if (dto.title() != null) t.setTitle(dto.title());
         if (dto.description() != null) t.setDescription(dto.description());
         if (dto.status() != null) t.setStatus(dto.status());
         if (dto.priority() != null) t.setPriority(dto.priority());
+
+        // dueAt: clear or set or leave unchanged
         if (Boolean.TRUE.equals(dto.clearDueAt())) {
             t.setDueAt(null);
         } else if (dto.dueAt() != null) {
             t.setDueAt(dto.dueAt());
         }
+
         // updatedAt выставится в @PreUpdate
-        return toDto(t);
+        return toDto(t, currentUsername);
     }
 
     @Transactional
