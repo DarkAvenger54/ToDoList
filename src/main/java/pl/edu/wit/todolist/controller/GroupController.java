@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import pl.edu.wit.todolist.dto.*;
+import pl.edu.wit.todolist.service.GroupInviteService;
 import pl.edu.wit.todolist.service.GroupService;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
+    private final GroupInviteService groupInviteService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -39,12 +41,12 @@ public class GroupController {
         return groupService.members(auth, groupId);
     }
 
-    @PostMapping("/{groupId}/members/{username}")
+    @PostMapping("/{groupId}/invites/{username}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addMember(Authentication auth,
-                          @PathVariable Long groupId,
-                          @PathVariable String username) {
-        groupService.addMember(auth, groupId, username);
+    public void invite(Authentication auth,
+                       @PathVariable Long groupId,
+                       @PathVariable String username) {
+        groupInviteService.invite(auth, groupId, username);
     }
 
     @PutMapping("/{groupId}/role")

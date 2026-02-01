@@ -3,26 +3,37 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ToDoList API Test UI</title>
+    <title>ToDoList API Test UI (with Group Invites)</title>
     <style>
         body { font-family: system-ui, Arial; margin: 16px; }
         h2 { margin-top: 28px; }
         .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
-        .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin: 12px 0; }
+        .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 12px 0; }
         label { display:block; font-size: 12px; opacity: 0.8; margin-top: 8px; }
-        input, textarea, select { width: 280px; max-width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
+        input, textarea, select { width: 280px; max-width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 10px; }
         textarea { height: 70px; }
         button { padding: 8px 12px; border: 1px solid #aaa; border-radius: 10px; background: #f7f7f7; cursor: pointer; }
         button:hover { background:#eee; }
         .small { font-size: 12px; opacity: .7; }
-        pre { background: #0b1020; color: #d7e0ff; padding: 12px; border-radius: 10px; overflow: auto; }
-        .ok { color: #1b7f2a; font-weight: 600; }
-        .bad { color: #b42318; font-weight: 700; }
-        .pill { display:inline-block; padding: 4px 8px; border-radius: 999px; border:1px solid #ddd; font-size: 12px; margin-left: 8px; }
+        pre { background: #0b1020; color: #d7e0ff; padding: 12px; border-radius: 12px; overflow: auto; }
+        .ok { color: #1b7f2a; font-weight: 700; }
+        .bad { color: #b42318; font-weight: 800; }
+        .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border:1px solid #ddd; font-size: 12px; margin-left: 8px; }
+        .muted { opacity: .75; }
+        .table { width:100%; border-collapse: collapse; }
+        .table th, .table td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 14px; }
+        .table th { font-size: 12px; opacity:.75; }
+        .btn-sm { padding: 6px 10px; border-radius: 10px; font-size: 12px; }
+        .btn-green { border-color:#2b8a3e; }
+        .btn-red { border-color:#c92a2a; }
+        .btn-blue { border-color:#1971c2; }
+        .split { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .hint { font-size:12px; opacity:.7; margin-top:6px; }
+        code { background:#f6f6f6; padding:2px 6px; border-radius:8px; }
     </style>
 </head>
 <body>
-<h1>ToDoList API Test UI</h1>
+<h1>ToDoList API Test UI <span class="pill muted">with Group Invites</span></h1>
 <div class="small">
     JWT хранится в localStorage. Заголовок: <code>Authorization: Bearer &lt;jwt&gt;</code>
     <span id="authState" class="pill">not logged</span>
@@ -34,15 +45,17 @@
         <div>
             <label>API_BASE</label>
             <input id="apiBase" value="http://localhost:8085" />
+            <div class="hint">Поддерживает backend, который отдаёт этот html как static.</div>
         </div>
         <div>
             <label>JWT</label>
             <input id="jwt" placeholder="will be stored here" />
         </div>
-        <div>
+        <div class="split">
             <button onclick="loadJwt()">Load JWT</button>
             <button onclick="saveJwt()">Save JWT</button>
             <button onclick="clearJwt()">Clear JWT</button>
+            <button class="btn-sm btn-blue" onclick="whoAmI()">Ping auth (hello)</button>
         </div>
     </div>
 </div>
@@ -212,6 +225,7 @@
             <hr style="margin:14px 0">
 
             <button onclick="myGroups()">GET /api/groups</button>
+            <div class="hint">Смотри id группы, вставь в поле Group ID справа.</div>
         </div>
 
         <div>
@@ -226,9 +240,16 @@
 
             <button onclick="groupMembers()">GET /api/groups/{id}/members</button>
 
-            <label>Add member username</label>
-            <input id="gAddUser" placeholder="username" />
-            <button onclick="addMember()">POST /api/groups/{id}/members/{username}</button>
+            <hr style="margin:14px 0">
+
+            <label><b>Invite user</b> (OWNER)</label>
+            <input id="gInviteUser" placeholder="username" />
+            <div class="split">
+                <button class="btn-blue" onclick="inviteMember()">POST /api/groups/{id}/invites/{username}</button>
+            </div>
+            <div class="hint">
+                Это новый flow. Старый endpoint <code>/members/{username}</code> лучше убрать/не использовать.
+            </div>
 
             <hr style="margin:14px 0">
 
@@ -240,6 +261,53 @@
                 <option selected>MEMBER</option>
             </select>
             <button onclick="setRole()">PUT /api/groups/{id}/role</button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>4.1) Group Invites (NEW)</h2>
+    <div class="row">
+        <div style="min-width:320px">
+            <div class="split">
+                <button onclick="listMyInvites()">GET /api/group-invites/mine</button>
+                <button class="btn-sm" onclick="renderInvitesFromLastResponse()">Render last response</button>
+            </div>
+            <div class="hint">
+                Показывает только <b>PENDING</b> (как мы сделали в сервисе).
+            </div>
+
+            <hr style="margin:14px 0">
+
+            <label>Invite ID (accept/reject)</label>
+            <input id="invId" placeholder="inviteId" />
+            <div class="split">
+                <button class="btn-green" onclick="acceptInvite()">POST /api/group-invites/{id}/accept</button>
+                <button class="btn-red" onclick="rejectInvite()">POST /api/group-invites/{id}/reject</button>
+            </div>
+
+            <hr style="margin:14px 0">
+
+            <label>Notification ID (если inviteId не знаешь)</label>
+            <input id="invNotifId" placeholder="notificationId" />
+            <div class="split">
+                <button class="btn-sm" onclick="useNotificationAsInviteId()">
+                    Use notification.refId as inviteId
+                </button>
+                <button class="btn-sm" onclick="fetchNotificationAndExtractRefId()">
+                    Fetch notification list & extract
+                </button>
+            </div>
+            <div class="hint">
+                В твоих уведомлениях <code>refId</code> = inviteId (если так реализовал notifyUser при invite).
+            </div>
+        </div>
+
+        <div style="flex:1; min-width:320px">
+            <div class="muted" style="margin-bottom:8px">Invites table</div>
+            <div id="invTable" class="card" style="margin:0; padding:10px; border-style:dashed;">
+                <div class="muted">Нажми <b>GET /api/group-invites/mine</b> — таблица появится тут.</div>
+            </div>
         </div>
     </div>
 </div>
@@ -346,8 +414,10 @@
 
             <label>notificationId</label>
             <input id="nId" placeholder="id" />
-            <button onclick="markRead()">POST /api/notifications/mark-read</button>
-            <button onclick="markAllRead()">POST /api/notifications/mark-all-read</button>
+            <div class="split">
+                <button onclick="markRead()">POST /api/notifications/mark-read</button>
+                <button onclick="markAllRead()">POST /api/notifications/mark-all-read</button>
+            </div>
         </div>
     </div>
 </div>
@@ -358,6 +428,8 @@
 
 <script>
     function $(id){ return document.getElementById(id); }
+
+    let lastResponse = null;  // сохраняем последний JSON response
 
     function setAuthState() {
         const jwt = $("jwt").value.trim();
@@ -396,17 +468,7 @@
         return h;
     }
 
-    async function request(method, path, body) {
-        const url = apiBase() + path;
-        const opts = { method, headers: authHeaders() };
-        if (body !== undefined) opts.body = JSON.stringify(body);
-
-        const res = await fetch(url, opts);
-        const text = await res.text();
-        let data;
-        try { data = text ? JSON.parse(text) : null; }
-        catch { data = text; }
-
+    function showResponse(method, path, res, data) {
         const status = res.ok ? "OK" : "ERROR";
         const line = `${method} ${path} -> ${res.status} ${status}`;
         $("statusLine").innerHTML = res.ok
@@ -416,13 +478,90 @@
         $("out").textContent = (typeof data === "string")
             ? data
             : JSON.stringify(data, null, 2);
+    }
 
-        if (!res.ok) throw new Error(line);
+    async function request(method, path, body) {
+        const url = apiBase() + path;
+        const opts = { method, headers: authHeaders() };
+        if (body !== undefined) opts.body = JSON.stringify(body);
+
+        const res = await fetch(url, opts);
+        const text = await res.text();
+
+        let data;
+        try { data = text ? JSON.parse(text) : null; }
+        catch { data = text; }
+
+        lastResponse = data;
+        showResponse(method, path, res, data);
+
+        if (!res.ok) throw new Error(`${method} ${path} -> ${res.status}`);
         return data;
     }
 
     function ok(msg) {
         $("statusLine").innerHTML = `<span class="ok">${msg}</span>`;
+    }
+
+    // ===== helper render =====
+    function renderInvitesTable(invites) {
+        const box = $("invTable");
+        if (!Array.isArray(invites) || invites.length === 0) {
+            box.innerHTML = `<div class="muted">Нет pending invites.</div>`;
+            return;
+        }
+
+        const rows = invites.map(i => `
+      <tr>
+        <td>${escapeHtml(String(i.id ?? ""))}</td>
+        <td>${escapeHtml(String(i.groupName ?? ""))} <span class="muted">(#${escapeHtml(String(i.groupId ?? ""))})</span></td>
+        <td>${escapeHtml(String(i.inviterUsername ?? ""))}</td>
+        <td>${escapeHtml(String(i.status ?? ""))}</td>
+        <td class="split">
+          <button class="btn-sm btn-green" onclick="acceptInviteQuick(${Number(i.id)})">Accept</button>
+          <button class="btn-sm btn-red" onclick="rejectInviteQuick(${Number(i.id)})">Reject</button>
+          <button class="btn-sm" onclick="copyInviteId(${Number(i.id)})">Use</button>
+        </td>
+      </tr>
+    `).join("");
+
+        box.innerHTML = `
+      <table class="table">
+        <thead>
+          <tr>
+            <th>inviteId</th>
+            <th>group</th>
+            <th>inviter</th>
+            <th>status</th>
+            <th>actions</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    }
+
+    function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, (c) => ({
+            "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+        }[c]));
+    }
+
+    function copyInviteId(id) {
+        $("invId").value = String(id);
+        ok("Invite ID inserted");
+    }
+
+    async function acceptInviteQuick(id) {
+        $("invId").value = String(id);
+        await acceptInvite();
+        await listMyInvites();
+    }
+
+    async function rejectInviteQuick(id) {
+        $("invId").value = String(id);
+        await rejectInvite();
+        await listMyInvites();
     }
 
     // ===== Auth =====
@@ -458,6 +597,11 @@
         });
     }
 
+    async function whoAmI() {
+        // твой HelloController: /api/v1/poctaserwis/test/hello
+        await request("GET", "/api/v1/poctaserwis/test/hello");
+    }
+
     // ===== Personal tasks =====
     async function createTask() {
         const priority = $("tPriority").value || null;
@@ -472,8 +616,8 @@
 
     async function listTasks() {
         const status = $("listStatus").value;
-        const page = encodeURIComponent($("page").value.trim());
-        const size = encodeURIComponent($("size").value.trim());
+        const page = $("page").value.trim();
+        const size = $("size").value.trim();
         const qs = new URLSearchParams();
         if (status) qs.set("status", status);
         if (page) qs.set("page", page);
@@ -545,10 +689,10 @@
         await request("GET", `/api/groups/${id}/members`);
     }
 
-    async function addMember() {
+    async function inviteMember() {
         const id = $("gId").value.trim();
-        const username = $("gAddUser").value.trim();
-        await request("POST", `/api/groups/${id}/members/${encodeURIComponent(username)}`);
+        const username = $("gInviteUser").value.trim();
+        await request("POST", `/api/groups/${id}/invites/${encodeURIComponent(username)}`);
     }
 
     async function setRole() {
@@ -557,6 +701,59 @@
             username: $("gRoleUser").value.trim(),
             role: $("gRole").value
         });
+    }
+
+    // ===== Group Invites (NEW) =====
+    async function listMyInvites() {
+        const data = await request("GET", "/api/group-invites/mine");
+        renderInvitesTable(data);
+    }
+
+    function renderInvitesFromLastResponse() {
+        renderInvitesTable(lastResponse);
+    }
+
+    async function acceptInvite() {
+        const id = $("invId").value.trim();
+        await request("POST", `/api/group-invites/${id}/accept`);
+    }
+
+    async function rejectInvite() {
+        const id = $("invId").value.trim();
+        await request("POST", `/api/group-invites/${id}/reject`);
+    }
+
+    async function useNotificationAsInviteId() {
+        // Здесь по-честному нужен notification.refId, но у нас есть только notificationId.
+        // Поэтому эта кнопка просто подсказывает "достань refId из списка уведомлений".
+        ok("Нажми: Fetch notification list & extract — потом выбери refId.");
+    }
+
+    async function fetchNotificationAndExtractRefId() {
+        // тянем уведомления и пытаемся найти notificationId, чтобы взять refId
+        const unreadOnly = "false";
+        const page = "0";
+        const size = "50";
+        const qs = new URLSearchParams({ unreadOnly, page, size });
+
+        const list = await request("GET", `/api/notifications?${qs.toString()}`);
+        // ожидаем Page<NotificationResponseDto> -> content[]
+        const notifId = Number($("invNotifId").value.trim());
+        if (!list || !Array.isArray(list.content)) {
+            ok("Notifications response is not Page{content:[]}. Проверь формат.");
+            return;
+        }
+        const n = list.content.find(x => Number(x.id) === notifId);
+        if (!n) {
+            ok("Notification not found in first 50. Увеличь size/ищи вручную.");
+            return;
+        }
+        if (n.refId == null) {
+            ok("This notification has no refId.");
+            return;
+        }
+        $("invId").value = String(n.refId);
+        ok(`Inserted inviteId from notification.refId = ${n.refId}`);
     }
 
     // ===== Group tasks =====
