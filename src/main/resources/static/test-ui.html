@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ToDoList API Test UI (with Group Invites)</title>
+    <title>ToDoList API Test UI (with Group Invites + AI)</title>
     <style>
         body { font-family: system-ui, Arial; margin: 16px; }
         h2 { margin-top: 28px; }
@@ -21,7 +21,7 @@
         .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; border:1px solid #ddd; font-size: 12px; margin-left: 8px; }
         .muted { opacity: .75; }
         .table { width:100%; border-collapse: collapse; }
-        .table th, .table td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 14px; }
+        .table th, .table td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 14px; vertical-align: top; }
         .table th { font-size: 12px; opacity:.75; }
         .btn-sm { padding: 6px 10px; border-radius: 10px; font-size: 12px; }
         .btn-green { border-color:#2b8a3e; }
@@ -30,10 +30,11 @@
         .split { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
         .hint { font-size:12px; opacity:.7; margin-top:6px; }
         code { background:#f6f6f6; padding:2px 6px; border-radius:8px; }
+        .w-full { width: 100% !important; }
     </style>
 </head>
 <body>
-<h1>ToDoList API Test UI <span class="pill muted">with Group Invites</span></h1>
+<h1>ToDoList API Test UI <span class="pill muted">with Group Invites + AI</span></h1>
 <div class="small">
     JWT хранится в localStorage. Заголовок: <code>Authorization: Bearer &lt;jwt&gt;</code>
     <span id="authState" class="pill">not logged</span>
@@ -247,9 +248,6 @@
             <div class="split">
                 <button class="btn-blue" onclick="inviteMember()">POST /api/groups/{id}/invites/{username}</button>
             </div>
-            <div class="hint">
-                Это новый flow. Старый endpoint <code>/members/{username}</code> лучше убрать/не использовать.
-            </div>
 
             <hr style="margin:14px 0">
 
@@ -274,7 +272,7 @@
                 <button class="btn-sm" onclick="renderInvitesFromLastResponse()">Render last response</button>
             </div>
             <div class="hint">
-                Показывает только <b>PENDING</b> (как мы сделали в сервисе).
+                Показывает только <b>PENDING</b>.
             </div>
 
             <hr style="margin:14px 0">
@@ -291,15 +289,12 @@
             <label>Notification ID (если inviteId не знаешь)</label>
             <input id="invNotifId" placeholder="notificationId" />
             <div class="split">
-                <button class="btn-sm" onclick="useNotificationAsInviteId()">
-                    Use notification.refId as inviteId
-                </button>
                 <button class="btn-sm" onclick="fetchNotificationAndExtractRefId()">
                     Fetch notification list & extract
                 </button>
             </div>
             <div class="hint">
-                В твоих уведомлениях <code>refId</code> = inviteId (если так реализовал notifyUser при invite).
+                refId = inviteId (если notifyUser так сделал при invite).
             </div>
         </div>
 
@@ -422,6 +417,66 @@
     </div>
 </div>
 
+<!-- ============================================================
+     7) AI MODULE (NEW)
+============================================================ -->
+<div class="card">
+    <h2>7) AI Tasks (NEW)</h2>
+
+    <div class="row">
+        <div style="min-width:340px; flex:1">
+            <label>command (что сделать)</label>
+            <textarea id="aiCommand" class="w-full"
+                      placeholder="Например: Сгенерируй 5 задач на сегодня: учеба, спорт, покупки"></textarea>
+
+            <div class="row">
+                <div>
+                    <label>scope</label>
+                    <select id="aiScope">
+                        <option value="PERSONAL" selected>PERSONAL</option>
+                        <option value="GROUP">GROUP</option>
+                    </select>
+                </div>
+                <div>
+                    <label>groupId (только для GROUP)</label>
+                    <input id="aiGroupId" placeholder="e.g. 1" />
+                </div>
+                <div>
+                    <label>maxTasks</label>
+                    <input id="aiMaxTasks" value="5" />
+                </div>
+            </div>
+
+            <div class="split" style="margin-top:10px">
+                <button class="btn-blue" onclick="aiSuggest()">POST /api/ai/tasks/suggest</button>
+                <button class="btn-sm" onclick="aiFillExample()">Fill example</button>
+                <button class="btn-sm" onclick="renderAiFromLastResponse()">Render last response</button>
+            </div>
+
+            <hr style="margin:14px 0">
+
+            <div class="split">
+                <button class="btn-green" onclick="aiCreateSelected()">Create selected (SAVE to DB)</button>
+                <button class="btn-sm" onclick="aiSelectAll(true)">Select all</button>
+                <button class="btn-sm" onclick="aiSelectAll(false)">Unselect all</button>
+            </div>
+
+            <div class="hint">
+                <b>Create selected</b>:
+                PERSONAL → <code>POST /api/tasks</code>,
+                GROUP → <code>POST /api/groups/{id}/tasks/for-all</code>
+            </div>
+        </div>
+
+        <div style="flex:1; min-width:360px">
+            <div class="muted" style="margin-bottom:8px">AI suggestions table</div>
+            <div id="aiTable" class="card" style="margin:0; padding:10px; border-style:dashed;">
+                <div class="muted">Нажми <b>POST /api/ai/tasks/suggest</b> — предложения появятся тут.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <h2>Response</h2>
 <div id="statusLine"></div>
 <pre id="out">{}</pre>
@@ -429,7 +484,8 @@
 <script>
     function $(id){ return document.getElementById(id); }
 
-    let lastResponse = null;  // сохраняем последний JSON response
+    let lastResponse = null;
+    let lastAiSuggestions = []; // хранит tasks[] из AI
 
     function setAuthState() {
         const jwt = $("jwt").value.trim();
@@ -503,48 +559,46 @@
         $("statusLine").innerHTML = `<span class="ok">${msg}</span>`;
     }
 
-    // ===== helper render =====
+    function escapeHtml(s) {
+        return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+            "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+        }[c]));
+    }
+
+    // ===== helper render invites =====
     function renderInvitesTable(invites) {
         const box = $("invTable");
         if (!Array.isArray(invites) || invites.length === 0) {
             box.innerHTML = `<div class="muted">Нет pending invites.</div>`;
             return;
         }
-
         const rows = invites.map(i => `
-      <tr>
-        <td>${escapeHtml(String(i.id ?? ""))}</td>
-        <td>${escapeHtml(String(i.groupName ?? ""))} <span class="muted">(#${escapeHtml(String(i.groupId ?? ""))})</span></td>
-        <td>${escapeHtml(String(i.inviterUsername ?? ""))}</td>
-        <td>${escapeHtml(String(i.status ?? ""))}</td>
-        <td class="split">
-          <button class="btn-sm btn-green" onclick="acceptInviteQuick(${Number(i.id)})">Accept</button>
-          <button class="btn-sm btn-red" onclick="rejectInviteQuick(${Number(i.id)})">Reject</button>
-          <button class="btn-sm" onclick="copyInviteId(${Number(i.id)})">Use</button>
-        </td>
-      </tr>
-    `).join("");
-
-        box.innerHTML = `
-      <table class="table">
-        <thead>
           <tr>
-            <th>inviteId</th>
-            <th>group</th>
-            <th>inviter</th>
-            <th>status</th>
-            <th>actions</th>
+            <td>${escapeHtml(String(i.id ?? ""))}</td>
+            <td>${escapeHtml(String(i.groupName ?? ""))} <span class="muted">(#${escapeHtml(String(i.groupId ?? ""))})</span></td>
+            <td>${escapeHtml(String(i.inviterUsername ?? ""))}</td>
+            <td>${escapeHtml(String(i.status ?? ""))}</td>
+            <td class="split">
+              <button class="btn-sm btn-green" onclick="acceptInviteQuick(${Number(i.id)})">Accept</button>
+              <button class="btn-sm btn-red" onclick="rejectInviteQuick(${Number(i.id)})">Reject</button>
+              <button class="btn-sm" onclick="copyInviteId(${Number(i.id)})">Use</button>
+            </td>
           </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-    }
-
-    function escapeHtml(s) {
-        return s.replace(/[&<>"']/g, (c) => ({
-            "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-        }[c]));
+        `).join("");
+        box.innerHTML = `
+          <table class="table">
+            <thead>
+              <tr>
+                <th>inviteId</th>
+                <th>group</th>
+                <th>inviter</th>
+                <th>status</th>
+                <th>actions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
     }
 
     function copyInviteId(id) {
@@ -598,7 +652,6 @@
     }
 
     async function whoAmI() {
-        // твой HelloController: /api/v1/poctaserwis/test/hello
         await request("GET", "/api/v1/poctaserwis/test/hello");
     }
 
@@ -703,7 +756,7 @@
         });
     }
 
-    // ===== Group Invites (NEW) =====
+    // ===== Group Invites =====
     async function listMyInvites() {
         const data = await request("GET", "/api/group-invites/mine");
         renderInvitesTable(data);
@@ -723,35 +776,17 @@
         await request("POST", `/api/group-invites/${id}/reject`);
     }
 
-    async function useNotificationAsInviteId() {
-        // Здесь по-честному нужен notification.refId, но у нас есть только notificationId.
-        // Поэтому эта кнопка просто подсказывает "достань refId из списка уведомлений".
-        ok("Нажми: Fetch notification list & extract — потом выбери refId.");
-    }
-
     async function fetchNotificationAndExtractRefId() {
-        // тянем уведомления и пытаемся найти notificationId, чтобы взять refId
-        const unreadOnly = "false";
-        const page = "0";
-        const size = "50";
-        const qs = new URLSearchParams({ unreadOnly, page, size });
-
+        const qs = new URLSearchParams({ unreadOnly: "false", page: "0", size: "50" });
         const list = await request("GET", `/api/notifications?${qs.toString()}`);
-        // ожидаем Page<NotificationResponseDto> -> content[]
         const notifId = Number($("invNotifId").value.trim());
         if (!list || !Array.isArray(list.content)) {
             ok("Notifications response is not Page{content:[]}. Проверь формат.");
             return;
         }
         const n = list.content.find(x => Number(x.id) === notifId);
-        if (!n) {
-            ok("Notification not found in first 50. Увеличь size/ищи вручную.");
-            return;
-        }
-        if (n.refId == null) {
-            ok("This notification has no refId.");
-            return;
-        }
+        if (!n) { ok("Notification not found in first 50."); return; }
+        if (n.refId == null) { ok("This notification has no refId."); return; }
         $("invId").value = String(n.refId);
         ok(`Inserted inviteId from notification.refId = ${n.refId}`);
     }
@@ -831,6 +866,134 @@
 
     async function markAllRead() {
         await request("POST", "/api/notifications/mark-all-read");
+    }
+
+    // ============================================================
+    // 7) AI MODULE (NEW)
+    // ============================================================
+    function aiFillExample() {
+        $("aiCommand").value = "Сгенерируй 5 задач на сегодня: учеба, спорт, покупки. Поставь приоритеты и сроки.";
+        $("aiScope").value = "PERSONAL";
+        $("aiGroupId").value = "";
+        $("aiMaxTasks").value = "5";
+        ok("Example inserted");
+    }
+
+    function renderAiFromLastResponse() {
+        renderAiTable(lastResponse);
+    }
+
+    async function aiSuggest() {
+        const scope = $("aiScope").value;
+        const groupIdRaw = $("aiGroupId").value.trim();
+        const maxTasksRaw = $("aiMaxTasks").value.trim();
+
+        const payload = {
+            command: $("aiCommand").value.trim(),
+            scope: scope || null,
+            groupId: (scope === "GROUP" && groupIdRaw) ? Number(groupIdRaw) : null,
+            maxTasks: maxTasksRaw ? Number(maxTasksRaw) : null
+        };
+
+        const data = await request("POST", "/api/ai/tasks/suggest", payload);
+        renderAiTable(data);
+    }
+
+    function renderAiTable(data) {
+        const box = $("aiTable");
+
+        const tasks = data && Array.isArray(data.tasks) ? data.tasks : null;
+        const summary = data && typeof data.summary === "string" ? data.summary : "";
+
+        if (!tasks || tasks.length === 0) {
+            lastAiSuggestions = [];
+            box.innerHTML = `<div class="muted">Нет задач в ответе. Проверь формат ответа сервера.</div>`;
+            return;
+        }
+
+        // сохраняем для create
+        lastAiSuggestions = tasks.map((t, idx) => ({
+            _idx: idx,
+            selected: true,
+            title: t.title ?? "",
+            description: t.description ?? null,
+            priority: t.priority ?? null,
+            dueAtIso: t.dueAtIso ?? ""
+        }));
+
+        const rows = lastAiSuggestions.map(t => `
+          <tr>
+            <td><input type="checkbox" data-ai-idx="${t._idx}" checked onchange="aiToggle(${t._idx}, this.checked)" /></td>
+            <td><b>${escapeHtml(t.title)}</b><div class="muted" style="margin-top:4px">${escapeHtml(t.description || "")}</div></td>
+            <td>${escapeHtml(t.priority || "")}</td>
+            <td>${escapeHtml(t.dueAtIso || "")}</td>
+          </tr>
+        `).join("");
+
+        box.innerHTML = `
+          ${summary ? `<div class="muted" style="margin-bottom:10px"><b>Summary:</b> ${escapeHtml(summary)}</div>` : ""}
+          <table class="table">
+            <thead>
+              <tr>
+                <th>save</th>
+                <th>task</th>
+                <th>priority</th>
+                <th>dueAtIso</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+    }
+
+    function aiToggle(idx, checked) {
+        const t = lastAiSuggestions.find(x => x._idx === idx);
+        if (t) t.selected = !!checked;
+    }
+
+    function aiSelectAll(on) {
+        lastAiSuggestions.forEach(t => t.selected = !!on);
+        document.querySelectorAll('input[type="checkbox"][data-ai-idx]').forEach(cb => cb.checked = !!on);
+        ok(on ? "Selected all" : "Unselected all");
+    }
+
+    // Создаём выбранные tasks в БД:
+    // PERSONAL -> POST /api/tasks
+    // GROUP -> POST /api/groups/{id}/tasks/for-all
+    async function aiCreateSelected() {
+        const scope = $("aiScope").value;
+        const groupId = $("aiGroupId").value.trim();
+
+        const selected = lastAiSuggestions.filter(t => t.selected);
+        if (selected.length === 0) { ok("Nothing selected"); return; }
+
+        if (scope === "GROUP" && !groupId) {
+            ok("Для GROUP нужен groupId");
+            return;
+        }
+
+        // последовательное создание (проще для дебага)
+        for (const t of selected) {
+            const dueAt = (t.dueAtIso && t.dueAtIso.trim()) ? t.dueAtIso.trim() : null;
+
+            if (scope === "PERSONAL") {
+                await request("POST", "/api/tasks", {
+                    title: t.title,
+                    description: t.description || null,
+                    priority: t.priority || null,
+                    dueAt: dueAt
+                });
+            } else {
+                await request("POST", `/api/groups/${groupId}/tasks/for-all`, {
+                    title: t.title,
+                    description: t.description || null,
+                    priority: t.priority || null,
+                    dueAt: dueAt
+                });
+            }
+        }
+
+        ok(`Created ${selected.length} task(s) in DB`);
     }
 
     // init
