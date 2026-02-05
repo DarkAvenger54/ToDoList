@@ -181,4 +181,58 @@ public class GroupTaskService {
         return taskRepository.findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(g, pageable)
                 .map(t -> toDto(t, me.getUsername()));
     }
+    @Transactional
+    public TaskResponseDto updateGroupTask(Authentication auth, Long groupId, Long taskId, GroupTaskUpdateRequestDto dto) {
+        GroupEntity g = groupRepository.findById(groupId).orElseThrow();
+        UserEntity me = perm.currentUser(auth);
+        perm.requireAdminOrOwner(g, me);
+
+        TaskEntity t = taskRepository.findById(taskId).orElseThrow();
+
+        // ВАЖНО: гарантируем что это task этой группы и scope=GROUP
+        if (t.getGroup() == null
+                || !t.getGroup().getId().equals(g.getId())
+                || t.getScope() == null
+                || t.getScope().name().equals("PERSONAL")) {
+            throw new IllegalArgumentException("Not a group task of this group");
+        }
+
+        if (dto.title() != null) t.setTitle(dto.title());
+        if (dto.description() != null) t.setDescription(dto.description());
+        if (dto.status() != null) t.setStatus(dto.status());
+        if (dto.priority() != null) t.setPriority(dto.priority());
+
+        // dueAt: clear or set
+        if (Boolean.TRUE.equals(dto.clearDueAt())) {
+            t.setDueAt(null);
+        } else if (dto.dueAt() != null) {
+            t.setDueAt(dto.dueAt());
+        }
+
+        // visibleInGroup можно менять только для задач "назначенных" (и вообще по желанию)
+        if (dto.visibleInGroup() != null) {
+            t.setVisibleInGroup(dto.visibleInGroup());
+        }
+
+        // updatedAt проставится в @PreUpdate
+        return toDto(t, me.getUsername());
+    }
+
+    @Transactional
+    public void deleteGroupTask(Authentication auth, Long groupId, Long taskId) {
+        GroupEntity g = groupRepository.findById(groupId).orElseThrow();
+        UserEntity me = perm.currentUser(auth);
+        perm.requireAdminOrOwner(g, me);
+
+        TaskEntity t = taskRepository.findById(taskId).orElseThrow();
+
+        if (t.getGroup() == null
+                || !t.getGroup().getId().equals(g.getId())
+                || t.getScope() == null
+                || t.getScope().name().equals("PERSONAL")) {
+            throw new IllegalArgumentException("Not a group task of this group");
+        }
+
+        taskRepository.delete(t);
+    }
 }

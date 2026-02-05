@@ -48,7 +48,7 @@ public class AiTaskService {
                         .model(ChatModel.of(aiProperties.model()))
                         .instructions(system)   // <-- вместо InputItem.ofSystem
                         .input(user)            // <-- вместо InputItem.ofUser
-                        .maxOutputTokens(aiProperties.maxOutputTokens() == null ? 800 : aiProperties.maxOutputTokens())
+                        .maxOutputTokens(aiProperties.maxOutputTokens() == null ? 1600 : aiProperties.maxOutputTokens())
                         .text(AiTaskSuggestionList.class) // <-- включает structured outputs
                         .build();
 

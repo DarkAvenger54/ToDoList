@@ -1,5 +1,6 @@
 package pl.edu.wit.todolist.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -67,5 +68,21 @@ public class GroupTaskController {
                                          @PathVariable Long groupId,
                                          @ParameterObject Pageable pageable) {
         return groupTaskService.visible(auth, groupId, pageable);
+    }
+    @PutMapping("/{taskId}")
+    public TaskResponseDto update(Authentication auth,
+                                  @PathVariable Long groupId,
+                                  @PathVariable Long taskId,
+                                  @Valid @RequestBody GroupTaskUpdateRequestDto dto) {
+        return groupTaskService.updateGroupTask(auth, groupId, taskId, dto);
+    }
+
+    // ADMIN/OWNER: удалить групповую задачу (назначенную или for-all)
+    @DeleteMapping("/{taskId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(Authentication auth,
+                       @PathVariable Long groupId,
+                       @PathVariable Long taskId) {
+        groupTaskService.deleteGroupTask(auth, groupId, taskId);
     }
 }
