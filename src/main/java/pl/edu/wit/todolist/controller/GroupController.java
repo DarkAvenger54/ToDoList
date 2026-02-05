@@ -56,4 +56,21 @@ public class GroupController {
                         @RequestBody GroupSetRoleRequestDto dto) {
         groupService.setRole(auth, groupId, dto);
     }
+    @PostMapping("/{groupId}/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leave(Authentication auth, @PathVariable Long groupId) {
+        groupService.leave(auth, groupId);
+    }
+    @DeleteMapping("/{groupId}/members/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void kick(Authentication auth,
+                     @PathVariable Long groupId,
+                     @PathVariable Long userId) {
+        groupService.kick(auth, groupId, userId);
+    }
+    @DeleteMapping("/{groupId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGroup(Authentication auth, @PathVariable Long groupId) {
+        groupService.deleteGroup(auth, groupId);
+    }
 }

@@ -3,6 +3,9 @@ package pl.edu.wit.todolist.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import pl.edu.wit.todolist.entity.TaskEntity;
 import pl.edu.wit.todolist.entity.UserEntity;
 import pl.edu.wit.todolist.enums.TaskScope;
@@ -27,4 +30,9 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
 
     // GROUP: лента группы (видимые задачи, которые админ отметил visibleInGroup=true)
     Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(GroupEntity group, Pageable pageable);
+
+    @Modifying
+    @Query("DELETE FROM TaskEntity t WHERE t.group = :group")
+    void deleteAllByGroup(@Param("group") GroupEntity group);
+
 }
