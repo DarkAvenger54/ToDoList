@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 @Table(name = "notifications", indexes = {
         @Index(name = "idx_notifications_user", columnList = "user_id"),
         @Index(name = "idx_notifications_read", columnList = "read"),
-        @Index(name = "idx_notifications_created", columnList = "createdAt")
+        @Index(name = "idx_notifications_created", columnList = "createdAt"),
+        @Index(name = "idx_notifications_user_type_ref", columnList = "user_id,type,refId")
 })
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder

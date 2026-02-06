@@ -42,7 +42,6 @@ public class GroupService {
                         .build()
         );
 
-        // owner становится участником с ролью OWNER
         groupMemberRepository.save(
                 GroupMemberEntity.builder()
                         .group(g)
@@ -91,7 +90,6 @@ public class GroupService {
                 .toList();
     }
 
-    // OWNER добавляет участника
     @Transactional
     public void addMember(Authentication auth, Long groupId, String username) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -119,7 +117,6 @@ public class GroupService {
         );
     }
 
-    // OWNER даёт/забирает админку
     @Transactional
     public void setRole(Authentication auth, Long groupId, GroupSetRoleRequestDto dto) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -139,7 +136,6 @@ public class GroupService {
 
         member.setRole(dto.role());
 
-        // опционально уведомлять
         notificationService.notifyUser(
                 target,
                 NotificationType.GROUP_INVITE_RECEIVED,
@@ -163,10 +159,19 @@ public class GroupService {
             throw new IllegalStateException("Owner cannot leave the group. Delete the group instead.");
         }
 
-        // Удаляем membership
         groupMemberRepository.delete(membership);
 
-        // (опционально) можно почистить pending invites этому юзеру в этой группе — не обязательно
+        UserEntity owner = g.getOwner();
+        if (owner != null && !owner.getId().equals(me.getId())) {
+            notificationService.notifyUser(
+                    owner,
+                    NotificationType.GROUP_MEMBER_LEFT,
+                    "Member left group",
+                    "User " + me.getUsername() + " left group: " + g.getName(),
+                    g.getId(),
+                    true
+            );
+        }
     }
 
     @Transactional
@@ -174,7 +179,6 @@ public class GroupService {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
         UserEntity me = perm.currentUser(auth);
 
-        // максимально строго: только OWNER
         perm.requireOwner(g, me);
 
         UserEntity target = userRepository.findById(userId)
@@ -188,13 +192,16 @@ public class GroupService {
             throw new IllegalArgumentException("Cannot kick OWNER");
         }
 
-        // Удаляем участника
         groupMemberRepository.delete(targetMembership);
 
-        // Вопрос: что делать с задачами, назначенными кикнутому?
-        // Ты просил каскадно при удалении группы. При "kick" обычно НЕ удаляют задачи группы.
-        // Можно оставить как есть: задачи сохраняются как история группы.
-        // Если хочешь — могу добавить опционально "unassign" (owner=null или переназначить).
+        notificationService.notifyUser(
+                target,
+                NotificationType.GROUP_MEMBER_KICKED,
+                "Removed from group",
+                "You were removed from group: " + g.getName(),
+                g.getId(),
+                true
+        );
     }
 
     @Transactional
@@ -204,16 +211,26 @@ public class GroupService {
 
         perm.requireOwner(g, me);
 
-        // 1) удалить задачи группы
+        List<UserEntity> members = groupMemberRepository.findAllByGroup(g).stream()
+                .map(GroupMemberEntity::getUser)
+                .distinct()
+                .toList();
+
+        String groupName = g.getName();
+        Long gid = g.getId();
         taskRepository.deleteAllByGroup(g);
-
-        // 2) удалить invites
         groupInviteRepository.deleteAllByGroup(g);
-
-        // 3) удалить memberships
         groupMemberRepository.deleteAllByGroup(g);
-
-        // 4) удалить саму группу
         groupRepository.delete(g);
+        for (UserEntity u : members) {
+            notificationService.notifyUser(
+                    u,
+                    NotificationType.GROUP_DELETED,
+                    "Group deleted",
+                    "Group \"" + groupName + "\" was deleted by owner " + me.getUsername(),
+                    gid,
+                    true
+            );
+        }
     }
 }

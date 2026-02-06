@@ -8,10 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pl.edu.wit.todolist.entity.TaskEntity;
 import pl.edu.wit.todolist.entity.UserEntity;
+import pl.edu.wit.todolist.enums.NotificationType;
 import pl.edu.wit.todolist.enums.TaskScope;
 import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.entity.GroupEntity;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -34,5 +37,26 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
     @Modifying
     @Query("DELETE FROM TaskEntity t WHERE t.group = :group")
     void deleteAllByGroup(@Param("group") GroupEntity group);
+
+    @Query("""
+    SELECT t FROM TaskEntity t
+    JOIN FETCH t.owner o
+    WHERE o IS NOT NULL
+      AND t.dueAt IS NOT NULL
+      AND t.status IN ('TODO', 'IN_PROGRESS')
+      AND t.dueAt >= :from
+      AND t.dueAt <= :to
+      AND NOT EXISTS (
+          SELECT 1 FROM NotificationEntity n
+          WHERE n.user = o
+            AND n.type = :type
+            AND n.refId = t.id
+      )
+""")
+    List<TaskEntity> findTasksDueSoonNotNotified(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
+            @Param("type") NotificationType type
+    );
 
 }
