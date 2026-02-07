@@ -17,7 +17,9 @@ public class CorsConfig {
 
         cfg.setAllowedOrigins(List.of(
                 "https://todolist.com.pl",
-                "http://todolist.com.pl"
+                "https://www.todolist.com.pl",
+                "http://todolist.com.pl",
+                "http://www.todolist.com.pl"
         ));
 
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
