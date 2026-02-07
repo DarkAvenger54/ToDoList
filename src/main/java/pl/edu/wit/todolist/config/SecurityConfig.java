@@ -30,13 +30,13 @@ import io.jsonwebtoken.security.Keys;
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtProperties jwtProperties;
-    private final org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, DaoAuthenticationProvider daoAuthenticationProvider) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+        http
+                .cors(cors -> {})
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -44,11 +44,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/webjars/**",
-                                // === dev pages + static ===
-                                "/confirm-email", "/forgot-password", "/reset-password",
-                                "/confirm-email.html", "/forgot-password.html", "/reset-password.html",
-                                "/static/**", "/", "/index.html", "/favicon.ico", "/test-ui.html"
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

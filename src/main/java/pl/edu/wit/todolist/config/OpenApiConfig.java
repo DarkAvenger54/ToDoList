@@ -10,9 +10,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-    private static final String API_TITLE = "Pocta Serwis API";
+    private static final String API_TITLE = "ToDoList API";
     private static final String API_VERSION = "v1";
-    private static final String API_DESCRIPTION = "API documentation for Pocta Serwis";
+    private static final String API_DESCRIPTION = "API documentation for ToDoList";
 
     private static final String SECURITY_SCHEME_NAME = "Bearer Authentication";
     private static final String AUTH_HEADER = "Authorization";
