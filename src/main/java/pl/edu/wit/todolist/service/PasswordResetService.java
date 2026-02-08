@@ -52,7 +52,7 @@ public class PasswordResetService {
             );
 
             // IMPORTANT: link to frontend page (dev html now, real FE later)
-            String resetLink = frontendBaseUrl + "/reset-password?token=" + pair.rawToken();
+            String resetLink = frontendBaseUrl + "/reset-password.html?token=" + pair.rawToken();
 
             emailService.sendPasswordReset(user.getEmail(), resetLink);
         });
@@ -71,7 +71,7 @@ public class PasswordResetService {
         emailTokenRepository.deleteAllByUserAndType(user, EmailTokenType.PASSWORD_RESET);
 
         // optional: send info email with "start reset again" link
-        String resetStartLink = frontendBaseUrl + "/forgot-password";
+        String resetStartLink = frontendBaseUrl + "/forgot-password.html";
         emailService.sendPasswordChangedInfo(user.getEmail(), user.getUsername(), resetStartLink);
     }
 }

@@ -71,7 +71,7 @@ public class EmailConfirmationService {
         );
 
         // IMPORTANT: link to frontend page (dev html now, real FE later)
-        String link = frontendBaseUrl + "/confirm-email?token=" + pair.rawToken();
+        String link = frontendBaseUrl + "/confirm-email.html?token=" + pair.rawToken();
         emailService.sendEmailConfirmation(user.getEmail(), link);
 
         user.setLastEmailConfirmationSentAt(LocalDateTime.now());
