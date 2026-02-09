@@ -20,7 +20,7 @@ public interface GroupInviteRepository extends JpaRepository<GroupInviteEntity, 
 
     boolean existsByGroupAndInviteeAndStatus(GroupEntity group, UserEntity invitee, GroupInviteStatus status);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM GroupInviteEntity i WHERE i.group = :group")
     void deleteAllByGroup(@Param("group") GroupEntity group);
 }

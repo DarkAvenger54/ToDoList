@@ -44,4 +44,10 @@ public class NotificationController {
     public void markAllRead(Authentication auth) {
         notificationService.markAllRead(auth);
     }
+
+    @DeleteMapping("/read")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRead(Authentication auth) {
+        notificationService.deleteRead(auth);
+    }
 }

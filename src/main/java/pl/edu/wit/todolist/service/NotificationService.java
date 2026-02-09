@@ -1,6 +1,8 @@
 package pl.edu.wit.todolist.service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private UserEntity currentUser(org.springframework.security.core.Authentication auth) {
         return userRepository.findByUsername(auth.getName())
@@ -60,10 +63,18 @@ public class NotificationService {
         NotificationEntity saved = notificationRepository.save(n);
 
         if (sendEmail) {
-            String subject = "[" + type.name() + "] " + title;
-            emailService.sendNotificationEmail(user.getEmail(), subject, title, message);
+            try {
+                String subject = "[" + type.name() + "] " + title;
+                emailService.sendNotificationEmail(
+                        user.getEmail(),
+                        subject,
+                        title,
+                        message
+                );
+            } catch (Exception e) {
+                log.warn("Failed to send notification email to {}", user.getEmail(), e);
+            }
         }
-
         return saved;
     }
 
@@ -111,5 +122,11 @@ public class NotificationService {
         notificationRepository
                 .findAllByUserAndReadFalseOrderByCreatedAtDesc(user, Pageable.unpaged())
                 .forEach(n -> n.setRead(true));
+    }
+
+    @Transactional
+    public long deleteRead(Authentication auth) {
+        UserEntity user = currentUser(auth);
+        return notificationRepository.deleteByUserAndReadTrue(user);
     }
 }

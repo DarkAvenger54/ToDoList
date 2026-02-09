@@ -44,4 +44,25 @@ public class GlobalExceptionHandler {
                 "message", ex.getMessage()
         );
     }
+    @ExceptionHandler(SecurityException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, Object> handleSecurity(SecurityException ex) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 403,
+                "error", "Forbidden",
+                "message", ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleBadRequest(IllegalArgumentException ex) {
+        return Map.of(
+                "timestamp", Instant.now(),
+                "status", 400,
+                "error", "Bad Request",
+                "message", ex.getMessage()
+        );
+    }
 }

@@ -34,7 +34,7 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
     // GROUP: лента группы (видимые задачи, которые админ отметил visibleInGroup=true)
     Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(GroupEntity group, Pageable pageable);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM TaskEntity t WHERE t.group = :group")
     void deleteAllByGroup(@Param("group") GroupEntity group);
 

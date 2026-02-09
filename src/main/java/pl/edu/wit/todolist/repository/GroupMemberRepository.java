@@ -21,7 +21,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMemberEntity, 
 
     boolean existsByGroupAndUser(GroupEntity group, UserEntity user);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM GroupMemberEntity m WHERE m.group = :group")
     void deleteAllByGroup(@Param("group") GroupEntity group);
 }
