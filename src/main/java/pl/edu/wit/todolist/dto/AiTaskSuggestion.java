@@ -15,5 +15,5 @@ public class AiTaskSuggestion {
     public TaskPriority priority;
 
     @JsonPropertyDescription("Due date-time in ISO-8601, or empty if not specified (e.g. 2026-02-05T18:00)")
-    public String dueAtIso; // оставим строкой, потом аккуратно парсим
+    public String dueAtIso;
 }

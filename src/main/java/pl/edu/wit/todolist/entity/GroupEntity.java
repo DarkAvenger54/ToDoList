@@ -20,7 +20,6 @@ public class GroupEntity {
     @Column(nullable = false, length = 80)
     private String name;
 
-    // OWNER/создатель один
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private UserEntity owner;

@@ -75,6 +75,13 @@ public class FriendshipService {
             throw new SecurityException("Нельзя принять чужую заявку");
         }
 
+        if (friendship.getStatus() == FriendshipStatus.ACCEPTED) {
+            return;
+        }
+        if (friendship.getStatus() != FriendshipStatus.PENDING) {
+            throw new IllegalArgumentException("Friend request is not pending");
+        }
+
         friendship.setStatus(FriendshipStatus.ACCEPTED);
         UserEntity requester = friendship.getRequester();
         UserEntity addressee = friendship.getAddressee();
@@ -90,11 +97,30 @@ public class FriendshipService {
     }
 
     // REMOVE FRIEND
-    public void remove(Long friendshipId, Authentication auth) {
+    public void remove(Long id, Authentication auth) {
+
+        UserEntity user = userRepository
+                .findByUsername(auth.getName())
+                .orElseThrow();
 
         FriendshipEntity friendship = friendshipRepository
-                .findById(friendshipId)
-                .orElseThrow();
+                .findById(id)
+                .orElse(null);
+
+        if (friendship == null
+                || (!friendship.getRequester().equals(user)
+                && !friendship.getAddressee().equals(user))) {
+
+            UserEntity other = userRepository
+                    .findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Friendship not found"));
+
+            friendship = friendshipRepository
+                    .findByRequesterAndAddressee(user, other)
+                    .orElseGet(() -> friendshipRepository
+                            .findByRequesterAndAddressee(other, user)
+                            .orElseThrow(() -> new IllegalArgumentException("Friendship not found")));
+        }
 
         String username = auth.getName();
 

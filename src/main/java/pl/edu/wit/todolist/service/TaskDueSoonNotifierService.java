@@ -22,14 +22,26 @@ public class TaskDueSoonNotifierService {
     @Value("${app.notifications.due-soon.minutes:60}")
     private long dueSoonMinutes;
 
+    @Value("${app.notifications.due-soon.minutes-secondary:5}")
+    private long dueSoonMinutesSecondary;
+
     @Scheduled(fixedDelayString = "${app.notifications.due-soon.poll-ms:60000}")
     @Transactional
     public void notifyDueSoonTasks() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime to = now.plusMinutes(dueSoonMinutes);
+
+        notifyDueSoonWindow(now, dueSoonMinutes, NotificationType.TASK_DUE_SOON);
+        notifyDueSoonWindow(now, dueSoonMinutesSecondary, NotificationType.TASK_DUE_SOON_5);
+    }
+
+    private void notifyDueSoonWindow(LocalDateTime now, long minutes, NotificationType type) {
+        if (minutes <= 0) {
+            return;
+        }
+        LocalDateTime to = now.plusMinutes(minutes);
 
         List<TaskEntity> tasks = taskRepository.findTasksDueSoonNotNotified(
-                now, to, NotificationType.TASK_DUE_SOON
+                now, to, type
         );
 
         for (TaskEntity t : tasks) {
@@ -37,9 +49,9 @@ public class TaskDueSoonNotifierService {
 
             notificationService.notifyUser(
                     t.getOwner(),
-                    NotificationType.TASK_DUE_SOON,
+                    type,
                     "Task due soon",
-                    "Task \"" + t.getTitle() + "\" is due at " + when,
+                    "Task \"" + t.getTitle() + "\" is due in " + minutes + " minutes at " + when,
                     t.getId(),
                     true
             );

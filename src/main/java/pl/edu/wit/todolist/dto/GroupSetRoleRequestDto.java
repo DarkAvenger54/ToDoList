@@ -5,5 +5,5 @@ import pl.edu.wit.todolist.enums.GroupRole;
 
 public record GroupSetRoleRequestDto(
         @NotBlank String username,
-        GroupRole role // ADMIN или MEMBER (OWNER запрещаем)
+        GroupRole role
 ) {}

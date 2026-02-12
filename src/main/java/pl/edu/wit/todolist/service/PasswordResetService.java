@@ -22,20 +22,12 @@ public class PasswordResetService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Base URL for "frontend pages" (in dev: backend-served static HTML,
-     * later: real frontend domain).
-     */
     @Value("${app.frontend-base-url:http://localhost:8085}")
     private String frontendBaseUrl;
 
     @Value("${app.password-reset.ttl-minutes:30}")
     private long ttlMinutes;
 
-    /**
-     * Start password reset flow.
-     * Must always be "silent": if email not found, do nothing (no errors).
-     */
     @Transactional
     public void startReset(String email) {
         if (email == null || email.isBlank()) return;
@@ -51,7 +43,6 @@ public class PasswordResetService {
                     null
             );
 
-            // IMPORTANT: link to frontend page (dev html now, real FE later)
             String resetLink = frontendBaseUrl + "/reset-password.html?token=" + pair.rawToken();
 
             emailService.sendPasswordReset(user.getEmail(), resetLink);
@@ -67,10 +58,8 @@ public class PasswordResetService {
 
         tokenEntity.setUsed(true);
 
-        // cleanup all reset tokens after successful reset
         emailTokenRepository.deleteAllByUserAndType(user, EmailTokenType.PASSWORD_RESET);
 
-        // optional: send info email with "start reset again" link
         String resetStartLink = frontendBaseUrl + "/forgot-password.html";
         emailService.sendPasswordChangedInfo(user.getEmail(), user.getUsername(), resetStartLink);
     }

@@ -20,18 +20,14 @@ import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
 
-    // PERSONAL
     Page<TaskEntity> findAllByOwnerAndScope(UserEntity owner, TaskScope scope, Pageable pageable);
     Page<TaskEntity> findAllByOwnerAndScopeAndStatus(UserEntity owner, TaskScope scope, TaskStatus status, Pageable pageable);
     Optional<TaskEntity> findByIdAndOwner(Long id, UserEntity owner);
 
-    // GROUP: мои назначенные задачи в группе (owner = assignee)
     Page<TaskEntity> findAllByGroupAndOwnerAndScopeOrderByCreatedAtDesc(GroupEntity group, UserEntity owner, TaskScope scope, Pageable pageable);
 
-    // GROUP: групповая задача для всех (owner=null, groupTask=true)
     Page<TaskEntity> findAllByGroupAndGroupTaskTrueOrderByCreatedAtDesc(GroupEntity group, Pageable pageable);
 
-    // GROUP: лента группы (видимые задачи, которые админ отметил visibleInGroup=true)
     Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(GroupEntity group, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

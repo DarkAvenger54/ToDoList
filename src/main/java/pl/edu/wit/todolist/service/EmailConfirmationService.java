@@ -12,18 +12,6 @@ import pl.edu.wit.todolist.repository.UserRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import pl.edu.wit.todolist.entity.UserEntity;
-import pl.edu.wit.todolist.enums.EmailTokenType;
-import pl.edu.wit.todolist.repository.EmailTokenRepository;
-import pl.edu.wit.todolist.repository.UserRepository;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 public class EmailConfirmationService {
@@ -33,13 +21,6 @@ public class EmailConfirmationService {
     private final EmailService emailService;
     private final UserRepository userRepository;
 
-    /**
-     * Base URL for "frontend pages" (in dev: your static HTML served by backend,
-     * later: real frontend domain).
-     *
-     * Example (dev):  http://localhost:8085
-     * Example (prod): https://app.yourdomain.com
-     */
     @Value("${app.frontend-base-url:http://localhost:8085}")
     private String frontendBaseUrl;
 
@@ -56,11 +37,9 @@ public class EmailConfirmationService {
 
         LocalDateTime last = user.getLastEmailConfirmationSentAt();
         if (last != null && last.plusSeconds(resendCooldownSeconds).isAfter(LocalDateTime.now())) {
-            // cooldown not passed -> silently ignore
             return;
         }
 
-        // only one active token per user for this type
         emailTokenRepository.deleteAllByUserAndType(user, EmailTokenType.EMAIL_CONFIRMATION);
 
         EmailTokenService.TokenPair pair = emailTokenService.createToken(
@@ -70,7 +49,6 @@ public class EmailConfirmationService {
                 null
         );
 
-        // IMPORTANT: link to frontend page (dev html now, real FE later)
         String link = frontendBaseUrl + "/confirm-email.html?token=" + pair.rawToken();
         emailService.sendEmailConfirmation(user.getEmail(), link);
 
@@ -87,7 +65,6 @@ public class EmailConfirmationService {
 
         tokenEntity.setUsed(true);
 
-        // optional cleanup: remove other confirmation tokens for this user
         emailTokenRepository.deleteAllByUserAndType(user, EmailTokenType.EMAIL_CONFIRMATION);
     }
 }

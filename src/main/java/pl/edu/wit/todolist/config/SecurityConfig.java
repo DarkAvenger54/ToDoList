@@ -48,10 +48,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                // Проверка JWT на всех защищённых endpoint'ах
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
-        // Для логина через AuthenticationManager (username+password)
         http.authenticationProvider(daoAuthenticationProvider);
 
         return http.build();

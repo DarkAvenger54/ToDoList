@@ -22,7 +22,6 @@ public class AiTaskController {
             @Valid @RequestBody AiTaskSuggestRequestDto req,
             Authentication auth
     ) {
-        // auth пока не используем, но endpoint защищён JWT’ом как и остальные
         return aiTaskService.suggest(req);
     }
 }

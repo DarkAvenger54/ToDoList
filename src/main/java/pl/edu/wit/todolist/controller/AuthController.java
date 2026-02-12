@@ -43,7 +43,6 @@ public class AuthController {
     @PostMapping("/forgot-password")
     @ResponseStatus(HttpStatus.OK)
     public void forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto dto) {
-        // must always be silent
         accountService.forgotPassword(dto.email());
     }
 

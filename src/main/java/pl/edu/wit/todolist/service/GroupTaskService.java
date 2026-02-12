@@ -49,7 +49,6 @@ public class GroupTaskService {
         );
     }
 
-    // ADMIN/OWNER: назначить задачу участнику
     @Transactional
     public TaskResponseDto assignToUser(Authentication auth, Long groupId, GroupAssignTaskRequestDto dto) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -62,7 +61,7 @@ public class GroupTaskService {
 
         TaskEntity t = TaskEntity.builder()
                 .creator(me)
-                .owner(assignee) // assignee
+                .owner(assignee)
                 .group(g)
                 .scope(TaskScope.GROUP)
                 .groupTask(false)
@@ -88,7 +87,6 @@ public class GroupTaskService {
         return toDto(saved, me.getUsername());
     }
 
-    // ADMIN/OWNER: создать групповую задачу "для всех" (owner=null)
     @Transactional
     public TaskResponseDto createForAll(Authentication auth, Long groupId, GroupCreateTaskForAllRequestDto dto) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -97,11 +95,11 @@ public class GroupTaskService {
 
         TaskEntity t = TaskEntity.builder()
                 .creator(me)
-                .owner(null) // важно: нет assignee
+                .owner(null)
                 .group(g)
                 .scope(TaskScope.GROUP)
                 .groupTask(true)
-                .visibleInGroup(true) // групповая обычно видна всем
+                .visibleInGroup(true)
                 .title(dto.title())
                 .description(dto.description())
                 .priority(dto.priority())
@@ -111,7 +109,6 @@ public class GroupTaskService {
 
         TaskEntity saved = taskRepository.save(t);
 
-        // опционально уведомить всех участников о новой groupTask
         for (GroupMemberEntity m : groupMemberRepository.findAllByGroup(g)) {
             notificationService.notifyUser(
                     m.getUser(),
@@ -126,7 +123,6 @@ public class GroupTaskService {
         return toDto(saved, me.getUsername());
     }
 
-    // ADMIN/OWNER: изменить статус groupTask (общий статус)
     @Transactional
     public void updateGroupTaskStatus(Authentication auth, Long groupId, Long taskId, GroupTaskUpdateStatusRequestDto dto) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -143,24 +139,19 @@ public class GroupTaskService {
         task.setStatus(dto.status());
     }
 
-    // MEMBER: мои задачи в группе = назначенные мне + groupTask
     @Transactional(readOnly = true)
     public Page<TaskResponseDto> mine(Authentication auth, Long groupId, Pageable pageable) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
         UserEntity me = perm.currentUser(auth);
         perm.requireMember(g, me);
 
-        // назначенные мне
         Page<TaskEntity> assigned = taskRepository.findAllByGroupAndOwnerAndScopeOrderByCreatedAtDesc(
                 g, me, TaskScope.GROUP, pageable
         );
 
-        // groupTask отдельно (обычно их немного, можно вынести отдельным endpoint’ом)
-        // здесь просто вернём только assigned (рекомендую отдельный endpoint /for-all)
         return assigned.map(t -> toDto(t, me.getUsername()));
     }
 
-    // groupTask list
     @Transactional(readOnly = true)
     public Page<TaskResponseDto> forAll(Authentication auth, Long groupId, Pageable pageable) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -171,7 +162,6 @@ public class GroupTaskService {
                 .map(t -> toDto(t, me.getUsername()));
     }
 
-    // лента видимых задач группы (visibleInGroup=true)
     @Transactional(readOnly = true)
     public Page<TaskResponseDto> visible(Authentication auth, Long groupId, Pageable pageable) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
@@ -189,7 +179,6 @@ public class GroupTaskService {
 
         TaskEntity t = taskRepository.findById(taskId).orElseThrow();
 
-        // ВАЖНО: гарантируем что это task этой группы и scope=GROUP
         if (t.getGroup() == null
                 || !t.getGroup().getId().equals(g.getId())
                 || t.getScope() == null
@@ -202,19 +191,16 @@ public class GroupTaskService {
         if (dto.status() != null) t.setStatus(dto.status());
         if (dto.priority() != null) t.setPriority(dto.priority());
 
-        // dueAt: clear or set
         if (Boolean.TRUE.equals(dto.clearDueAt())) {
             t.setDueAt(null);
         } else if (dto.dueAt() != null) {
             t.setDueAt(dto.dueAt());
         }
 
-        // visibleInGroup можно менять только для задач "назначенных" (и вообще по желанию)
         if (dto.visibleInGroup() != null) {
             t.setVisibleInGroup(dto.visibleInGroup());
         }
 
-        // updatedAt проставится в @PreUpdate
         return toDto(t, me.getUsername());
     }
 

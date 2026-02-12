@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.edu.wit.todolist.enums.EmailTokenType;
 
-
 import java.time.LocalDateTime;
 
 @Entity

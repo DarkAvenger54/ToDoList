@@ -3,6 +3,7 @@ package pl.edu.wit.todolist.enums;
 
 public enum NotificationType {
     TASK_DUE_SOON,
+    TASK_DUE_SOON_5,
     FRIEND_REQUEST_RECEIVED,
     FRIEND_REQUEST_ACCEPTED,
     GROUP_INVITE_RECEIVED,

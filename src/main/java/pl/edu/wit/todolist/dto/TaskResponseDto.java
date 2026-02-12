@@ -17,12 +17,10 @@ public record TaskResponseDto(
         LocalDateTime dueAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-
-        // NEW
-        String creatorDisplayName, // "you" или username создателя
+        String creatorDisplayName,
         Long groupId,
         String groupName,
-        String assigneeUsername,   // кому назначено (для groupTask = null)
+        String assigneeUsername,
         boolean groupTask,
         boolean visibleInGroup
 ) {}

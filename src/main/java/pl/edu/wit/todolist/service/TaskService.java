@@ -58,7 +58,7 @@ public class TaskService {
 
         TaskEntity task = TaskEntity.builder()
                 .creator(user)
-                .owner(user) // personal task assigned to self
+                .owner(user)
                 .title(dto.title())
                 .description(dto.description())
                 .priority(dto.priority())
@@ -106,14 +106,12 @@ public class TaskService {
         if (dto.status() != null) t.setStatus(dto.status());
         if (dto.priority() != null) t.setPriority(dto.priority());
 
-        // dueAt: clear or set or leave unchanged
         if (Boolean.TRUE.equals(dto.clearDueAt())) {
             t.setDueAt(null);
         } else if (dto.dueAt() != null) {
             t.setDueAt(dto.dueAt());
         }
 
-        // updatedAt выставится в @PreUpdate
         return toDto(t, currentUsername);
     }
 

@@ -49,7 +49,6 @@ public class NotificationEntity {
         createdAt = LocalDateTime.now();
         if (title != null) title = title.trim();
         if (message != null) message = message.trim();
-        // по умолчанию не прочитано
         read = false;
     }
 }

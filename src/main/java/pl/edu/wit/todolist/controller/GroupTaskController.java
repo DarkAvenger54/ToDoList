@@ -18,7 +18,6 @@ public class GroupTaskController {
 
     private final GroupTaskService groupTaskService;
 
-    // ADMIN/OWNER: назначить задачу участнику
     @PostMapping("/assign")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDto assign(Authentication auth,
@@ -27,7 +26,6 @@ public class GroupTaskController {
         return groupTaskService.assignToUser(auth, groupId, dto);
     }
 
-    // ADMIN/OWNER: создать групповую задачу "для всех"
     @PostMapping("/for-all")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDto createForAll(Authentication auth,
@@ -36,7 +34,6 @@ public class GroupTaskController {
         return groupTaskService.createForAll(auth, groupId, dto);
     }
 
-    // ADMIN/OWNER: поменять статус groupTask
     @PostMapping("/{taskId}/status")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateStatus(Authentication auth,
@@ -46,7 +43,6 @@ public class GroupTaskController {
         groupTaskService.updateGroupTaskStatus(auth, groupId, taskId, dto);
     }
 
-    // MEMBER: мои назначенные задачи в группе
     @GetMapping("/mine")
     public Page<TaskResponseDto> mine(Authentication auth,
                                       @PathVariable Long groupId,
@@ -54,7 +50,6 @@ public class GroupTaskController {
         return groupTaskService.mine(auth, groupId, pageable);
     }
 
-    // MEMBER: список groupTask "для всех"
     @GetMapping("/for-all/list")
     public Page<TaskResponseDto> forAllList(Authentication auth,
                                             @PathVariable Long groupId,
@@ -62,7 +57,6 @@ public class GroupTaskController {
         return groupTaskService.forAll(auth, groupId, pageable);
     }
 
-    // MEMBER: лента visibleInGroup
     @GetMapping("/visible")
     public Page<TaskResponseDto> visible(Authentication auth,
                                          @PathVariable Long groupId,
@@ -77,7 +71,6 @@ public class GroupTaskController {
         return groupTaskService.updateGroupTask(auth, groupId, taskId, dto);
     }
 
-    // ADMIN/OWNER: удалить групповую задачу (назначенную или for-all)
     @DeleteMapping("/{taskId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(Authentication auth,

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ToDoList</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="top-app-bar">
+        <div class="bar-left">
+          <div class="brand">ToDoList</div>
+        </div>
+        <div class="bar-center">
+          <div id="route-title" class="route-title">Welcome</div>
+        </div>
+        <div class="bar-right">
+          <button id="theme-toggle" class="icon-button" aria-label="Toggle theme">
+            Dark
+          </button>
+          <div data-auth="private" class="bar-right">
+            <div id="current-user" class="user-pill" aria-live="polite"></div>
+            <button
+              id="notifications-button"
+              class="icon-button"
+              data-link="#/notifications"
+              aria-label="Notifications"
+            >
+              Alerts
+              <span id="notification-badge" class="badge hidden">0</span>
+            </button>
+            <button id="logout-button" class="button ghost">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <aside id="nav-rail" class="nav-rail" data-auth="private">
+        <a class="nav-item" data-link="#/tasks">Tasks</a>
+        <a class="nav-item" data-link="#/groups">Groups</a>
+        <a class="nav-item" data-link="#/friends">Friends</a>
+        <a class="nav-item" data-link="#/notifications">Alerts</a>
+        <a class="nav-item" data-link="#/settings">Settings</a>
+        <a class="nav-item" data-link="#/ai">AI</a>
+      </aside>
+
+      <main id="main-content" class="content">
+        <section id="view-login" class="view" data-view="login">
+          <div class="auth-layout">
+            <div class="card">
+              <h1>Welcome back</h1>
+              <form id="login-form">
+                <div class="input-group">
+                  <label for="login-login">Email or username</label>
+                  <input
+                    id="login-login"
+                    class="input"
+                    type="text"
+                    required
+                    autocomplete="username"
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="login-password">Password</label>
+                  <input
+                    id="login-password"
+                    class="input"
+                    type="password"
+                    required
+                    autocomplete="current-password"
+                  />
+                </div>
+                <button class="button primary" type="submit">Sign in</button>
+              </form>
+
+              <div id="verify-panel" class="panel hidden">
+                <p id="verify-message">
+                  Email verification is required. Please check your inbox.
+                </p>
+                <div class="input-group">
+                  <label for="verify-email">Email</label>
+                  <input id="verify-email" class="input" type="email" />
+                </div>
+                <button
+                  id="resend-confirmation"
+                  class="button small"
+                  type="button"
+                >
+                  Resend confirmation email
+                </button>
+              </div>
+
+              <div class="auth-links">
+                <a data-link="#/register">Create account</a>
+                <a data-link="#/forgot-password">Forgot password?</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-register" class="view" data-view="register">
+          <div class="auth-layout">
+            <div class="card">
+              <h1>Create account</h1>
+              <form id="register-form">
+                <div class="input-group">
+                  <label for="register-username">Username</label>
+                  <input
+                    id="register-username"
+                    class="input"
+                    type="text"
+                    required
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="register-email">Email</label>
+                  <input
+                    id="register-email"
+                    class="input"
+                    type="email"
+                    required
+                  />
+                </div>
+                <div class="input-group">
+                  <label for="register-password">Password</label>
+                  <input
+                    id="register-password"
+                    class="input"
+                    type="password"
+                    required
+                  />
+                </div>
+                <button class="button primary" type="submit">Register</button>
+              </form>
+              <div class="auth-links">
+                <a data-link="#/login">Back to login</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-confirm-email" class="view" data-view="confirm-email">
+          <div class="auth-layout">
+            <div class="card">
+              <h1>Email confirmation</h1>
+              <p id="confirm-status">Waiting for confirmation token...</p>
+              <div class="auth-links">
+                <a data-link="#/login">Back to login</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-forgot-password" class="view" data-view="forgot-password">
+          <div class="auth-layout">
+            <div class="card">
+              <h1>Forgot password</h1>
+              <form id="forgot-form">
+                <div class="input-group">
+                  <label for="forgot-email">Email</label>
+                  <input id="forgot-email" class="input" type="email" required />
+                </div>
+                <button class="button primary" type="submit">Send reset link</button>
+              </form>
+              <div class="auth-links">
+                <a data-link="#/login">Back to login</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-reset-password" class="view" data-view="reset-password">
+          <div class="auth-layout">
+            <div class="card">
+              <h1>Reset password</h1>
+              <form id="reset-form">
+                <div class="input-group">
+                  <label for="reset-token">Reset token</label>
+                  <input id="reset-token" class="input" type="text" required />
+                </div>
+                <div class="input-group">
+                  <label for="reset-password">New password</label>
+                  <input
+                    id="reset-password"
+                    class="input"
+                    type="password"
+                    required
+                  />
+                </div>
+                <button class="button primary" type="submit">Reset password</button>
+              </form>
+              <div class="auth-links">
+                <a data-link="#/login">Back to login</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-tasks" class="view" data-view="tasks">
+          <div class="section-header">
+            <h2>Personal tasks</h2>
+            <button id="task-create-button" class="button primary">
+              New task
+            </button>
+          </div>
+          <div class="panel">
+            <div class="form-row">
+              <div class="input-group">
+                <label for="tasks-filter">Filter by status</label>
+                <select id="tasks-filter" class="select">
+                  <option value="">All</option>
+                  <option value="TODO">TODO</option>
+                  <option value="IN_PROGRESS">IN PROGRESS</option>
+                  <option value="DONE">DONE</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="tasks-list" class="list"></div>
+          <div id="tasks-pagination" class="pagination"></div>
+        </section>
+
+        <section id="view-groups" class="view" data-view="groups">
+          <div class="section-header">
+            <h2>Groups</h2>
+          </div>
+          <div class="card">
+            <form id="group-create-form">
+              <div class="input-group">
+                <label for="group-name">Group name</label>
+                <input id="group-name" class="input" type="text" required />
+              </div>
+              <button class="button primary" type="submit">Create group</button>
+            </form>
+          </div>
+          <div id="groups-list" class="list"></div>
+        </section>
+
+        <section id="view-group-detail" class="view" data-view="group-detail">
+          <div class="section-header">
+            <div>
+              <h2 id="group-title">Group</h2>
+              <div id="group-owner" class="meta"></div>
+            </div>
+            <button class="button ghost" data-link="#/groups">
+              Back to groups
+            </button>
+          </div>
+
+          <div class="split-layout">
+            <div>
+              <div class="card">
+                <h3>Group settings</h3>
+                <form id="group-rename-form">
+                  <div class="input-group">
+                    <label for="group-rename">Group name</label>
+                    <input id="group-rename" class="input" type="text" required />
+                  </div>
+                  <button class="button small primary" type="submit">
+                    Rename
+                  </button>
+                </form>
+                <div id="group-owner-actions">
+                  <form id="group-invite-form">
+                    <div class="input-group">
+                      <label for="group-invite-username">Invite by username</label>
+                      <input
+                        id="group-invite-username"
+                        class="input"
+                        type="text"
+                      />
+                    </div>
+                    <button class="button small" type="submit">Send invite</button>
+                  </form>
+                  <button id="group-delete-button" class="button danger small">
+                    Delete group
+                  </button>
+                </div>
+                <button id="group-leave-button" class="button ghost small">
+                  Leave group
+                </button>
+              </div>
+
+              <div class="card">
+                <h3>Members</h3>
+                <div id="group-members-list" class="list"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="card">
+                <div class="section-header">
+                  <h3>Group tasks</h3>
+                  <div class="segmented">
+                    <button type="button" data-group-tab="mine">My assigned</button>
+                    <button type="button" data-group-tab="all">For all</button>
+                    <button type="button" data-group-tab="visible">
+                      Visible feed
+                    </button>
+                    <button type="button" data-group-tab="create">
+                      Create task
+                    </button>
+                  </div>
+                </div>
+
+                <div id="group-admin-actions" class="stack hidden">
+                  <div class="panel">
+                    <h4>Assign task to member</h4>
+                    <form id="group-assign-form">
+                      <div class="input-group">
+                        <label for="group-assign-username">Assignee username</label>
+                        <input
+                          id="group-assign-username"
+                          class="input"
+                          type="text"
+                        />
+                      </div>
+                      <div class="input-group">
+                        <label for="group-assign-title">Title</label>
+                        <input id="group-assign-title" class="input" type="text" />
+                      </div>
+                      <div class="input-group">
+                        <label for="group-assign-description">Description</label>
+                        <textarea
+                          id="group-assign-description"
+                          class="textarea"
+                        ></textarea>
+                      </div>
+                      <div class="form-row">
+                        <div class="input-group">
+                          <label for="group-assign-priority">Priority</label>
+                          <select id="group-assign-priority" class="select">
+                            <option value="">None</option>
+                            <option value="LOW">LOW</option>
+                            <option value="MEDIUM">MEDIUM</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="URGENT">URGENT</option>
+                          </select>
+                        </div>
+                        <div class="input-group">
+                          <label for="group-assign-dueAt">Due at</label>
+                          <input
+                            id="group-assign-dueAt"
+                            class="input"
+                            type="datetime-local"
+                          />
+                        </div>
+                      </div>
+                      <div class="input-group">
+                        <label>
+                          <input id="group-assign-visible" type="checkbox" />
+                          Visible in group feed
+                        </label>
+                      </div>
+                      <button class="button small primary" type="submit">
+                        Assign
+                      </button>
+                    </form>
+                  </div>
+
+                  <div class="panel">
+                    <h4>Create for all</h4>
+                    <form id="group-forall-form">
+                      <div class="input-group">
+                        <label for="group-forall-title">Title</label>
+                        <input id="group-forall-title" class="input" type="text" />
+                      </div>
+                      <div class="input-group">
+                        <label for="group-forall-description">Description</label>
+                        <textarea
+                          id="group-forall-description"
+                          class="textarea"
+                        ></textarea>
+                      </div>
+                      <div class="form-row">
+                        <div class="input-group">
+                          <label for="group-forall-priority">Priority</label>
+                          <select id="group-forall-priority" class="select">
+                            <option value="">None</option>
+                            <option value="LOW">LOW</option>
+                            <option value="MEDIUM">MEDIUM</option>
+                            <option value="HIGH">HIGH</option>
+                            <option value="URGENT">URGENT</option>
+                          </select>
+                        </div>
+                        <div class="input-group">
+                          <label for="group-forall-dueAt">Due at</label>
+                          <input
+                            id="group-forall-dueAt"
+                            class="input"
+                            type="datetime-local"
+                          />
+                        </div>
+                      </div>
+                      <button class="button small primary" type="submit">
+                        Create
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                <div id="group-create-locked" class="empty-state hidden">
+                  Only group admins can create tasks.
+                </div>
+                <div id="group-tasks-section">
+                  <div id="group-tasks-list" class="list"></div>
+                  <div id="group-tasks-pagination" class="pagination"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-friends" class="view" data-view="friends">
+          <div class="section-header">
+            <h2>Friends</h2>
+          </div>
+          <div class="card">
+            <form id="friend-request-form">
+              <div class="input-group">
+                <label for="friend-username">Send request by username</label>
+                <input id="friend-username" class="input" type="text" required />
+              </div>
+              <button class="button primary" type="submit">Send request</button>
+            </form>
+          </div>
+          <div class="panel">
+            <p>
+              Friend request accepts are handled in Notifications when a request
+              arrives.
+            </p>
+          </div>
+          <div id="friends-list" class="list"></div>
+        </section>
+
+        <section id="view-notifications" class="view" data-view="notifications">
+          <div class="section-header">
+            <h2>Notifications</h2>
+            <div class="section-actions">
+              <button id="notifications-delete-read" class="button small ghost">
+                Delete read
+              </button>
+              <button id="notifications-mark-all" class="button small ghost">
+                Mark all read
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <label>
+              <input id="notifications-unread-toggle" type="checkbox" />
+              Unread only
+            </label>
+          </div>
+          <div id="notifications-list" class="list"></div>
+          <div id="notifications-pagination" class="pagination"></div>
+        </section>
+
+        <section id="view-settings" class="view" data-view="settings">
+          <div class="section-header">
+            <h2>Settings</h2>
+          </div>
+          <div class="card">
+            <h3>Change password</h3>
+            <form id="change-password-form">
+              <div class="input-group">
+                <label for="old-password">Current password</label>
+                <input
+                  id="old-password"
+                  class="input"
+                  type="password"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <label for="new-password">New password</label>
+                <input
+                  id="new-password"
+                  class="input"
+                  type="password"
+                  required
+                />
+              </div>
+              <button class="button primary" type="submit">Update password</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="view-ai" class="view" data-view="ai">
+          <div class="section-header">
+            <h2>AI task suggestions</h2>
+          </div>
+          <div class="card">
+            <form id="ai-form">
+              <div class="input-group">
+                <label for="ai-command">Describe your tasks</label>
+                <textarea id="ai-command" class="textarea" required></textarea>
+              </div>
+              <div class="form-row">
+                <div class="input-group">
+                  <label for="ai-scope">Scope</label>
+                  <select id="ai-scope" class="select">
+                    <option value="PERSONAL">PERSONAL</option>
+                    <option value="GROUP">GROUP</option>
+                  </select>
+                </div>
+                <div class="input-group hidden" id="ai-group-row">
+                  <label for="ai-group">Group</label>
+                  <select id="ai-group" class="select"></select>
+                </div>
+                <div class="input-group">
+                  <label for="ai-max">Max tasks</label>
+                  <input id="ai-max" class="input" type="number" min="1" />
+                </div>
+              </div>
+              <button class="button primary" type="submit">Generate</button>
+            </form>
+          </div>
+          <div
+            id="ai-status"
+            class="ai-status hidden"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="ai-status-dots" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="ai-status-text">AI is thinking...</div>
+          </div>
+          <div id="ai-results" class="list"></div>
+        </section>
+      </main>
+
+      <nav id="bottom-nav" class="bottom-nav" data-auth="private">
+        <a class="nav-item" data-link="#/tasks">Tasks</a>
+        <a class="nav-item" data-link="#/groups">Groups</a>
+        <a class="nav-item" data-link="#/friends">Friends</a>
+        <a class="nav-item" data-link="#/notifications">Alerts</a>
+        <a class="nav-item" data-link="#/ai">AI</a>
+      </nav>
+    </div>
+
+    <div id="snackbar-container" class="snackbar-container"></div>
+
+    <dialog id="task-dialog" class="app-dialog">
+      <div class="dialog-header">
+        <h3 id="task-dialog-title">New task</h3>
+      </div>
+      <form id="task-form">
+        <div class="dialog-body">
+          <div class="input-group">
+            <label for="task-title">Title</label>
+            <input id="task-title" class="input" type="text" required />
+          </div>
+          <div class="input-group">
+            <label for="task-description">Description</label>
+            <textarea id="task-description" class="textarea"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="task-priority">Priority</label>
+              <select id="task-priority" class="select">
+                <option value="">None</option>
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="URGENT">URGENT</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="task-dueAt">Due at</label>
+              <input id="task-dueAt" class="input" type="datetime-local" />
+            </div>
+          </div>
+          <div id="task-status-group" class="input-group hidden">
+            <label for="task-status">Status</label>
+            <select id="task-status" class="select">
+              <option value="TODO">TODO</option>
+              <option value="IN_PROGRESS">IN PROGRESS</option>
+              <option value="DONE">DONE</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+          <div id="task-clear-group" class="input-group hidden">
+            <label>
+              <input id="task-clear-due" type="checkbox" />
+              Clear due date
+            </label>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button class="button ghost" type="button" onclick="this.closest('dialog').close()">
+            Cancel
+          </button>
+          <button class="button primary" type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="group-task-dialog" class="app-dialog">
+      <div class="dialog-header">
+        <h3 id="group-task-dialog-title">Edit group task</h3>
+      </div>
+      <form id="group-task-form">
+        <div class="dialog-body">
+          <div class="input-group">
+            <label for="group-task-title">Title</label>
+            <input id="group-task-title" class="input" type="text" required />
+          </div>
+          <div class="input-group">
+            <label for="group-task-description">Description</label>
+            <textarea id="group-task-description" class="textarea"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="group-task-priority">Priority</label>
+              <select id="group-task-priority" class="select">
+                <option value="">None</option>
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="URGENT">URGENT</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="group-task-dueAt">Due at</label>
+              <input id="group-task-dueAt" class="input" type="datetime-local" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="group-task-status">Status</label>
+              <select id="group-task-status" class="select">
+                <option value="TODO">TODO</option>
+                <option value="IN_PROGRESS">IN PROGRESS</option>
+                <option value="DONE">DONE</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>
+                <input id="group-task-visible" type="checkbox" />
+                Visible in group feed
+              </label>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>
+              <input id="group-task-clear-due" type="checkbox" />
+              Clear due date
+            </label>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button class="button ghost" type="button" onclick="this.closest('dialog').close()">
+            Cancel
+          </button>
+          <button class="button primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="confirm-dialog" class="app-dialog">
+      <div class="dialog-header">
+        <h3 id="confirm-title">Confirm</h3>
+      </div>
+      <div class="dialog-body">
+        <p id="confirm-message"></p>
+      </div>
+      <div class="dialog-footer">
+        <button id="confirm-no" class="button ghost" type="button">Cancel</button>
+        <button id="confirm-yes" class="button danger" type="button">Confirm</button>
+      </div>
+    </dialog>
+
+    <dialog id="prompt-dialog" class="app-dialog">
+      <div class="dialog-header">
+        <h3 id="prompt-title">Provide value</h3>
+      </div>
+      <div class="dialog-body">
+        <p id="prompt-message"></p>
+        <div class="input-group">
+          <input id="prompt-input" class="input" type="text" />
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button id="prompt-cancel" class="button ghost" type="button">
+          Cancel
+        </button>
+        <button id="prompt-ok" class="button primary" type="button">
+          Confirm
+        </button>
+      </div>
+    </dialog>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
