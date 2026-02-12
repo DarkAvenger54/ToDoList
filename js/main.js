@@ -186,6 +186,12 @@ function bindGlobalEvents() {
     navigate("/login");
   });
 
+  window.addEventListener("auth:verify-required", () => {
+    clearAuth();
+    updateAuthUI();
+    navigate("/login");
+  });
+
   window.addEventListener("auth:login", () => {
     updateAuthUI();
     clearAiResults();

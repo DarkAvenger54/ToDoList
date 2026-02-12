@@ -11,6 +11,29 @@ import { navigate } from "../router.js";
 
 let lastPage = 0;
 const pageSize = 20;
+const acceptedRequests = new Set();
+const rejectedRequests = new Set();
+
+function setAcceptedState(button, notificationId) {
+  if (!button) return;
+  button.textContent = "Accepted";
+  button.disabled = true;
+  button.classList.add("is-accepted");
+  if (Number.isFinite(notificationId)) {
+    acceptedRequests.add(notificationId);
+  }
+}
+
+function setRejectedState(button, notificationId) {
+  if (!button) return;
+  button.textContent = "Rejected";
+  button.disabled = true;
+  button.classList.add("is-rejected");
+  if (Number.isFinite(notificationId)) {
+    rejectedRequests.add(notificationId);
+    acceptedRequests.delete(notificationId);
+  }
+}
 
 export function initNotifications() {
   const toggle = qs("#notifications-unread-toggle");
@@ -67,6 +90,7 @@ export function initNotifications() {
       if (acceptFriend) {
         const id = acceptFriend.dataset.refId;
         const notificationId = Number(acceptFriend.dataset.id);
+        const originalText = acceptFriend.textContent;
         acceptFriend.disabled = true;
         try {
           await apiFetch(`/api/friends/accept/${id}`, { method: "POST" });
@@ -76,34 +100,74 @@ export function initNotifications() {
               body: { notificationId },
             });
           }
+          setAcceptedState(acceptFriend, notificationId);
           showToast("Friend request accepted.", "success");
           loadNotifications(lastPage);
           refreshUnreadCount();
-        } finally {
+        } catch {
           acceptFriend.disabled = false;
+          acceptFriend.textContent = originalText;
+          acceptFriend.classList.remove("is-accepted");
         }
       }
 
       if (acceptInvite) {
         const id = acceptInvite.dataset.refId;
-        await apiFetch(`/api/group-invites/${id}/accept`, { method: "POST" });
-        showToast("Group invite accepted.", "success");
-        loadNotifications(lastPage);
-        refreshUnreadCount();
+        const notificationId = Number(acceptInvite.dataset.id);
+        const originalText = acceptInvite.textContent;
+        acceptInvite.disabled = true;
+        try {
+          await apiFetch(`/api/group-invites/${id}/accept`, { method: "POST" });
+          if (Number.isFinite(notificationId)) {
+            await apiFetch("/api/notifications/mark-read", {
+              method: "POST",
+              body: { notificationId },
+            });
+          }
+          setAcceptedState(acceptInvite, notificationId);
+          showToast("Group invite accepted.", "success");
+          loadNotifications(lastPage);
+          refreshUnreadCount();
+        } catch {
+          acceptInvite.disabled = false;
+          acceptInvite.textContent = originalText;
+          acceptInvite.classList.remove("is-accepted");
+        }
       }
 
       if (rejectInvite) {
         const id = rejectInvite.dataset.refId;
+        const notificationId = Number(rejectInvite.dataset.id);
+        const originalText = rejectInvite.textContent;
+        const acceptButton = rejectInvite
+          .closest(".notification-item")
+          ?.querySelector("[data-action='accept-invite']");
         const confirmed = await confirmDialog({
           title: "Reject invite",
           message: "Do you want to reject this group invite?",
           confirmText: "Reject",
         });
-        if (confirmed) {
+        if (!confirmed) return;
+        rejectInvite.disabled = true;
+        if (acceptButton) acceptButton.disabled = true;
+        try {
           await apiFetch(`/api/group-invites/${id}/reject`, { method: "POST" });
+          if (Number.isFinite(notificationId)) {
+            await apiFetch("/api/notifications/mark-read", {
+              method: "POST",
+              body: { notificationId },
+            });
+          }
+          setRejectedState(rejectInvite, notificationId);
+          if (acceptButton) acceptButton.remove();
           showToast("Invite rejected.", "success");
           loadNotifications(lastPage);
           refreshUnreadCount();
+        } catch {
+          rejectInvite.disabled = false;
+          rejectInvite.textContent = originalText;
+          rejectInvite.classList.remove("is-rejected");
+          if (acceptButton) acceptButton.disabled = false;
         }
       }
 
@@ -199,25 +263,39 @@ function renderNotifications(listData) {
     if (note.type === "FRIEND_REQUEST_RECEIVED" && note.refId) {
       const accept = document.createElement("button");
       accept.className = "button small";
-      accept.textContent = "Accept";
-      accept.dataset.action = "accept-friend";
       accept.dataset.refId = note.refId;
       accept.dataset.id = note.id;
+      if (acceptedRequests.has(note.id)) {
+        setAcceptedState(accept, note.id);
+      } else {
+        accept.textContent = "Accept";
+        accept.dataset.action = "accept-friend";
+      }
       actions.appendChild(accept);
     }
 
     if (note.type === "GROUP_INVITE_RECEIVED" && note.refId) {
       const accept = document.createElement("button");
       accept.className = "button small";
-      accept.textContent = "Accept";
-      accept.dataset.action = "accept-invite";
       accept.dataset.refId = note.refId;
-      const reject = document.createElement("button");
-      reject.className = "button small ghost";
-      reject.textContent = "Reject";
-      reject.dataset.action = "reject-invite";
-      reject.dataset.refId = note.refId;
-      actions.append(accept, reject);
+      accept.dataset.id = note.id;
+      if (acceptedRequests.has(note.id)) {
+        setAcceptedState(accept, note.id);
+        actions.append(accept);
+      } else if (rejectedRequests.has(note.id)) {
+        setRejectedState(accept, note.id);
+        actions.append(accept);
+      } else {
+        accept.textContent = "Accept";
+        accept.dataset.action = "accept-invite";
+        const reject = document.createElement("button");
+        reject.className = "button small ghost";
+        reject.textContent = "Reject";
+        reject.dataset.action = "reject-invite";
+        reject.dataset.refId = note.refId;
+        reject.dataset.id = note.id;
+        actions.append(accept, reject);
+      }
     }
 
     const isTaskDueSoon =

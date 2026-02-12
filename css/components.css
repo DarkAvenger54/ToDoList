@@ -213,6 +213,18 @@
   transform: none;
 }
 
+.button.is-accepted {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+.button.is-rejected {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
 .icon-button {
   border: none;
   background: transparent;
@@ -251,6 +263,11 @@
   flex-direction: column;
   gap: 6px;
   margin-bottom: 12px;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .input,
