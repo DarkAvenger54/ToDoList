@@ -1,4 +1,4 @@
-package pl.edu.wit.todolist.dto;
+package pl.edu.wit.todolist.dto.group;
 
 import jakarta.validation.constraints.NotBlank;
 import pl.edu.wit.todolist.enums.GroupRole;

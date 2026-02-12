@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.edu.wit.todolist.dto.*;
+import pl.edu.wit.todolist.dto.group.*;
 import pl.edu.wit.todolist.entity.GroupEntity;
 import pl.edu.wit.todolist.entity.GroupMemberEntity;
 import pl.edu.wit.todolist.entity.UserEntity;

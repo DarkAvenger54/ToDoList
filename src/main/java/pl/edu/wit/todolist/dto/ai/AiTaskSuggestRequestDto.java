@@ -1,4 +1,4 @@
-package pl.edu.wit.todolist.dto;
+package pl.edu.wit.todolist.dto.ai;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -1,4 +1,4 @@
-package pl.edu.wit.todolist.dto;
+package pl.edu.wit.todolist.dto.group;
 
 public record GroupResponseDto(
         Long id,

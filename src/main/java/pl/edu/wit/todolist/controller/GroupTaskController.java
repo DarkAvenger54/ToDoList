@@ -8,7 +8,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import pl.edu.wit.todolist.dto.*;
+import pl.edu.wit.todolist.dto.group.GroupAssignTaskRequestDto;
+import pl.edu.wit.todolist.dto.group.GroupCreateTaskForAllRequestDto;
+import pl.edu.wit.todolist.dto.group.GroupTaskUpdateRequestDto;
+import pl.edu.wit.todolist.dto.group.GroupTaskUpdateStatusRequestDto;
+import pl.edu.wit.todolist.dto.task.TaskResponseDto;
 import pl.edu.wit.todolist.service.GroupTaskService;
 
 @RestController

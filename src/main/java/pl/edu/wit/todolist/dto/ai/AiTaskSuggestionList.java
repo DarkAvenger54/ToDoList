@@ -1,4 +1,4 @@
-package pl.edu.wit.todolist.dto;
+package pl.edu.wit.todolist.dto.ai;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;

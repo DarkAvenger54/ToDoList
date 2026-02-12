@@ -1,4 +1,4 @@
-package pl.edu.wit.todolist.dto;
+package pl.edu.wit.todolist.dto.task;
 
 import pl.edu.wit.todolist.enums.TaskPriority;
 import pl.edu.wit.todolist.enums.TaskScope;

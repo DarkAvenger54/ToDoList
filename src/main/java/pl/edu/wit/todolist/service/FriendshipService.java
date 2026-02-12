@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.edu.wit.todolist.dto.FriendResponseDto;
+import pl.edu.wit.todolist.dto.friend.FriendResponseDto;
 import pl.edu.wit.todolist.entity.FriendshipEntity;
 import pl.edu.wit.todolist.entity.UserEntity;
 import pl.edu.wit.todolist.enums.FriendshipStatus;

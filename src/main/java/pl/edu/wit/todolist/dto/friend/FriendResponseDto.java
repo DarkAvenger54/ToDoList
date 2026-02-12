@@ -1,4 +1,4 @@
-package pl.edu.wit.todolist.dto;
+package pl.edu.wit.todolist.dto.friend;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

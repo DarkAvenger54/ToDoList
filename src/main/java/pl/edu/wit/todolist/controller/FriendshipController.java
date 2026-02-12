@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import pl.edu.wit.todolist.dto.FriendRequestDto;
-import pl.edu.wit.todolist.dto.FriendResponseDto;
+import pl.edu.wit.todolist.dto.friend.FriendRequestDto;
+import pl.edu.wit.todolist.dto.friend.FriendResponseDto;
 import pl.edu.wit.todolist.service.FriendshipService;
 
 import java.util.List;

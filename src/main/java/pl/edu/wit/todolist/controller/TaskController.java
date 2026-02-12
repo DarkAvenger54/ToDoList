@@ -8,9 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import pl.edu.wit.todolist.dto.TaskCreateRequestDto;
-import pl.edu.wit.todolist.dto.TaskResponseDto;
-import pl.edu.wit.todolist.dto.TaskUpdateRequestDto;
+import pl.edu.wit.todolist.dto.task.TaskCreateRequestDto;
+import pl.edu.wit.todolist.dto.task.TaskResponseDto;
+import pl.edu.wit.todolist.dto.task.TaskUpdateRequestDto;
 import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.service.TaskService;
 

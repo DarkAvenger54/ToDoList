@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import pl.edu.wit.todolist.dto.GroupInviteResponseDto;
+import pl.edu.wit.todolist.dto.group.GroupInviteResponseDto;
 import pl.edu.wit.todolist.service.GroupInviteService;
 
 import java.util.List;
