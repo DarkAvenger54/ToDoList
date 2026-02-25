@@ -13,6 +13,8 @@ import pl.edu.wit.todolist.dto.group.GroupCreateTaskForAllRequestDto;
 import pl.edu.wit.todolist.dto.group.GroupTaskUpdateRequestDto;
 import pl.edu.wit.todolist.dto.group.GroupTaskUpdateStatusRequestDto;
 import pl.edu.wit.todolist.dto.task.TaskResponseDto;
+import pl.edu.wit.todolist.enums.TaskFilter;
+import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.service.GroupTaskService;
 
 @RestController
@@ -50,22 +52,28 @@ public class GroupTaskController {
     @GetMapping("/mine")
     public Page<TaskResponseDto> mine(Authentication auth,
                                       @PathVariable Long groupId,
+                                      @RequestParam(required = false) TaskFilter filter,
+                                      @RequestParam(required = false) TaskStatus status,
                                       @ParameterObject Pageable pageable) {
-        return groupTaskService.mine(auth, groupId, pageable);
+        return groupTaskService.mine(auth, groupId, filter, status, pageable);
     }
 
     @GetMapping("/for-all/list")
     public Page<TaskResponseDto> forAllList(Authentication auth,
                                             @PathVariable Long groupId,
+                                            @RequestParam(required = false) TaskFilter filter,
+                                            @RequestParam(required = false) TaskStatus status,
                                             @ParameterObject Pageable pageable) {
-        return groupTaskService.forAll(auth, groupId, pageable);
+        return groupTaskService.forAll(auth, groupId, filter, status, pageable);
     }
 
     @GetMapping("/visible")
     public Page<TaskResponseDto> visible(Authentication auth,
                                          @PathVariable Long groupId,
+                                         @RequestParam(required = false) TaskFilter filter,
+                                         @RequestParam(required = false) TaskStatus status,
                                          @ParameterObject Pageable pageable) {
-        return groupTaskService.visible(auth, groupId, pageable);
+        return groupTaskService.visible(auth, groupId, filter, status, pageable);
     }
     @PutMapping("/{taskId}")
     public TaskResponseDto update(Authentication auth,

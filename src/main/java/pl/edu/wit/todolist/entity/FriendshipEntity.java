@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.edu.wit.todolist.enums.FriendshipStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(
@@ -37,6 +37,6 @@ public class FriendshipEntity {
     private FriendshipStatus status;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 }
 

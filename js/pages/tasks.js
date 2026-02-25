@@ -10,6 +10,7 @@ import {
   renderPagination,
   formatDateTime,
   toInputDateTime,
+  toUtcIso,
 } from "../ui.js";
 
 let editingTaskId = null;
@@ -20,6 +21,10 @@ export function initTasks() {
   const filter = qs("#tasks-filter");
   if (filter) {
     filter.addEventListener("change", () => loadTasks(0));
+  }
+  const overdueOnly = qs("#tasks-overdue-only");
+  if (overdueOnly) {
+    overdueOnly.addEventListener("change", () => loadTasks(0));
   }
 
   const createButton = qs("#task-create-button");
@@ -35,8 +40,18 @@ export function initTasks() {
   const list = qs("#tasks-list");
   if (list) {
     list.addEventListener("click", async (event) => {
+      const completeButton = event.target.closest("[data-action='complete']");
       const editButton = event.target.closest("[data-action='edit']");
       const deleteButton = event.target.closest("[data-action='delete']");
+      if (completeButton) {
+        const id = completeButton.dataset.id;
+        await apiFetch(`/api/tasks/${id}`, {
+          method: "PUT",
+          body: { status: "DONE" },
+        });
+        showToast("Task completed.", "success");
+        loadTasks(lastPage);
+      }
       if (editButton) {
         const id = editButton.dataset.id;
         await openTaskDialogById(id);
@@ -61,6 +76,7 @@ export function initTasks() {
 export async function loadTasks(page = 0) {
   const filter = qs("#tasks-filter");
   const status = filter?.value || "";
+  const overdueOnly = qs("#tasks-overdue-only")?.checked;
   const params = new URLSearchParams({
     page: `${page}`,
     size: `${pageSize}`,
@@ -69,7 +85,9 @@ export async function loadTasks(page = 0) {
 
   const data = await apiFetch(`/api/tasks?${params.toString()}`);
   lastPage = data.number ?? 0;
-  renderTasks(data.content || []);
+  const tasks = data.content || [];
+  const filtered = overdueOnly ? tasks.filter((task) => task.overdue === true) : tasks;
+  renderTasks(filtered);
   renderPagination(qs("#tasks-pagination"), data, loadTasks);
 }
 
@@ -93,11 +111,12 @@ function renderTasks(tasks) {
   sorted.forEach((task) => {
     const card = document.createElement("div");
     card.className = "card task-card";
-    const isOverdue =
-      task.dueAt &&
-      new Date(task.dueAt) < new Date() &&
-      !["DONE", "CANCELLED"].includes(task.status);
-    if (isOverdue) card.classList.add("overdue");
+    const isOverdue = task.overdue === true;
+    if (isOverdue && task.status !== "DONE") {
+      card.classList.add("overdue");
+    } else if (task.status === "DONE") {
+      card.classList.add("completed");
+    }
 
     const title = document.createElement("h3");
     title.textContent = task.title;
@@ -115,6 +134,13 @@ function renderTasks(tasks) {
     priorityChip.textContent = task.priority || "NONE";
     meta.append(statusChip, priorityChip);
 
+    if (isOverdue && task.status !== "DONE") {
+      const overdue = document.createElement("span");
+      overdue.className = "chip overdue";
+      overdue.textContent = "OVERDUE";
+      meta.appendChild(overdue);
+    }
+
     if (task.dueAt) {
       const due = document.createElement("span");
       due.textContent = `Due ${formatDateTime(task.dueAt)}`;
@@ -123,6 +149,13 @@ function renderTasks(tasks) {
 
     const actions = document.createElement("div");
     actions.className = "inline-actions";
+    const doneButton = document.createElement("button");
+    doneButton.className = "button small";
+    doneButton.textContent =
+      task.status === "DONE" ? "Completed" : "Mark done";
+    doneButton.dataset.action = "complete";
+    doneButton.dataset.id = task.id;
+    doneButton.disabled = task.status === "DONE";
     const edit = document.createElement("button");
     edit.className = "button small";
     edit.textContent = "Edit";
@@ -133,7 +166,7 @@ function renderTasks(tasks) {
     del.textContent = "Delete";
     del.dataset.action = "delete";
     del.dataset.id = task.id;
-    actions.append(edit, del);
+    actions.append(doneButton, edit, del);
 
     card.append(title, desc, meta, actions);
     list.appendChild(card);
@@ -171,7 +204,7 @@ async function handleTaskSubmit(event) {
   const priority = qs("#task-priority").value || null;
   const status = qs("#task-status").value || null;
   const dueAtValue = qs("#task-dueAt").value;
-  const dueAt = dueAtValue ? dueAtValue : null;
+  const dueAt = toUtcIso(dueAtValue);
   const clearDueAt = qs("#task-clear-due").checked;
 
   if (!title) {

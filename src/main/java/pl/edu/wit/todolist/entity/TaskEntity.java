@@ -6,7 +6,7 @@ import pl.edu.wit.todolist.enums.TaskPriority;
 import pl.edu.wit.todolist.enums.TaskScope;
 import pl.edu.wit.todolist.enums.TaskStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "tasks", indexes = {
@@ -59,7 +59,7 @@ public class TaskEntity {
     private TaskScope scope;
 
     @Column
-    private LocalDateTime dueAt;
+    private Instant dueAt;
 
     @Column(nullable = false)
     private boolean groupTask;
@@ -68,10 +68,10 @@ public class TaskEntity {
     private boolean visibleInGroup;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     void prePersist() {
@@ -80,13 +80,13 @@ public class TaskEntity {
         if (priority == null) priority = TaskPriority.MEDIUM;
         if (scope == null) scope = TaskScope.PERSONAL;
 
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
         updatedAt = createdAt;
     }
 
     @PreUpdate
     void preUpdate() {
         if (title != null) title = title.trim();
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
 }

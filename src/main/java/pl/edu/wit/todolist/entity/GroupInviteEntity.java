@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.edu.wit.todolist.enums.GroupInviteStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(
@@ -41,14 +41,14 @@ public class GroupInviteEntity {
     private GroupInviteStatus status;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column
-    private LocalDateTime respondedAt;
+    private Instant respondedAt;
 
     @PrePersist
     void prePersist() {
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
         if (status == null) status = GroupInviteStatus.PENDING;
     }
 }

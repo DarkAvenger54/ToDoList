@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.edu.wit.todolist.enums.NotificationType;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "notifications", indexes = {
@@ -39,14 +39,14 @@ public class NotificationEntity {
     private Long refId;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(nullable = false)
     private boolean read;
 
     @PrePersist
     void prePersist() {
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
         if (title != null) title = title.trim();
         if (message != null) message = message.trim();
         read = false;

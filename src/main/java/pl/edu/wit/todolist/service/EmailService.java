@@ -8,7 +8,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 
 @Service
@@ -34,7 +34,7 @@ public class EmailService {
                 "emails/password-changed",
                 Map.of(
                         "username", username,
-                        "time", LocalDateTime.now().toString(),
+                        "time", Instant.now().toString(),
                         "resetStartLink", resetStartLink
                 )
         );

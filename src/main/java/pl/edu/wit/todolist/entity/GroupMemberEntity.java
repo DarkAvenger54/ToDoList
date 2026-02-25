@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.edu.wit.todolist.enums.GroupRole;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(
@@ -36,11 +36,11 @@ public class GroupMemberEntity {
     private GroupRole role;
 
     @Column(nullable = false)
-    private LocalDateTime joinedAt;
+    private Instant joinedAt;
 
     @PrePersist
     void prePersist() {
-        joinedAt = LocalDateTime.now();
+        joinedAt = Instant.now();
         if (role == null) role = GroupRole.MEMBER;
     }
 }

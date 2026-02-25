@@ -265,6 +265,14 @@
   margin-bottom: 12px;
 }
 
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .hint {
   color: var(--text-muted);
   font-size: 12px;
@@ -329,7 +337,20 @@
 
 .task-card.overdue {
   border-color: rgba(229, 72, 77, 0.4);
-  box-shadow: 0 0 0 2px rgba(229, 72, 77, 0.1);
+  background: rgba(229, 72, 77, 0.08);
+  box-shadow: 0 0 0 2px rgba(229, 72, 77, 0.08);
+}
+
+.task-card.completed {
+  border-color: rgba(46, 125, 50, 0.35);
+  background: rgba(46, 125, 50, 0.08);
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.06);
+}
+
+.chip.overdue {
+  background: var(--status-overdue-bg);
+  color: var(--status-overdue-text);
+  text-transform: uppercase;
 }
 
 .task-meta {

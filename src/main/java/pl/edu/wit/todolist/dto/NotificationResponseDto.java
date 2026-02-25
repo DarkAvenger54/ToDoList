@@ -2,7 +2,7 @@ package pl.edu.wit.todolist.dto;
 
 import pl.edu.wit.todolist.enums.NotificationType;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record NotificationResponseDto(
         Long id,
@@ -10,6 +10,6 @@ public record NotificationResponseDto(
         String title,
         String message,
         Long refId,
-        LocalDateTime createdAt,
+        Instant createdAt,
         boolean read
 ) {}

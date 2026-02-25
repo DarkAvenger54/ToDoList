@@ -13,7 +13,8 @@ import pl.edu.wit.todolist.enums.TaskScope;
 import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.entity.GroupEntity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,13 +23,75 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
 
     Page<TaskEntity> findAllByOwnerAndScope(UserEntity owner, TaskScope scope, Pageable pageable);
     Page<TaskEntity> findAllByOwnerAndScopeAndStatus(UserEntity owner, TaskScope scope, TaskStatus status, Pageable pageable);
+    Page<TaskEntity> findAllByOwnerAndScopeAndStatusIn(UserEntity owner, TaskScope scope, Collection<TaskStatus> statuses, Pageable pageable);
+    Page<TaskEntity> findAllByOwnerAndScopeAndStatusInAndDueAtIsNotNullAndDueAtBefore(
+            UserEntity owner,
+            TaskScope scope,
+            Collection<TaskStatus> statuses,
+            Instant dueAt,
+            Pageable pageable
+    );
     Optional<TaskEntity> findByIdAndOwner(Long id, UserEntity owner);
 
     Page<TaskEntity> findAllByGroupAndOwnerAndScopeOrderByCreatedAtDesc(GroupEntity group, UserEntity owner, TaskScope scope, Pageable pageable);
+    Page<TaskEntity> findAllByGroupAndOwnerAndScopeAndStatusOrderByCreatedAtDesc(
+            GroupEntity group,
+            UserEntity owner,
+            TaskScope scope,
+            TaskStatus status,
+            Pageable pageable
+    );
+    Page<TaskEntity> findAllByGroupAndOwnerAndScopeAndStatusInOrderByCreatedAtDesc(
+            GroupEntity group,
+            UserEntity owner,
+            TaskScope scope,
+            Collection<TaskStatus> statuses,
+            Pageable pageable
+    );
+    Page<TaskEntity> findAllByGroupAndOwnerAndScopeAndStatusInAndDueAtIsNotNullAndDueAtBeforeOrderByCreatedAtDesc(
+            GroupEntity group,
+            UserEntity owner,
+            TaskScope scope,
+            Collection<TaskStatus> statuses,
+            Instant dueAt,
+            Pageable pageable
+    );
 
     Page<TaskEntity> findAllByGroupAndGroupTaskTrueOrderByCreatedAtDesc(GroupEntity group, Pageable pageable);
+    Page<TaskEntity> findAllByGroupAndGroupTaskTrueAndStatusOrderByCreatedAtDesc(
+            GroupEntity group,
+            TaskStatus status,
+            Pageable pageable
+    );
+    Page<TaskEntity> findAllByGroupAndGroupTaskTrueAndStatusInOrderByCreatedAtDesc(
+            GroupEntity group,
+            Collection<TaskStatus> statuses,
+            Pageable pageable
+    );
+    Page<TaskEntity> findAllByGroupAndGroupTaskTrueAndStatusInAndDueAtIsNotNullAndDueAtBeforeOrderByCreatedAtDesc(
+            GroupEntity group,
+            Collection<TaskStatus> statuses,
+            Instant dueAt,
+            Pageable pageable
+    );
 
     Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(GroupEntity group, Pageable pageable);
+    Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueAndStatusOrderByCreatedAtDesc(
+            GroupEntity group,
+            TaskStatus status,
+            Pageable pageable
+    );
+    Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueAndStatusInOrderByCreatedAtDesc(
+            GroupEntity group,
+            Collection<TaskStatus> statuses,
+            Pageable pageable
+    );
+    Page<TaskEntity> findAllByGroupAndVisibleInGroupTrueAndStatusInAndDueAtIsNotNullAndDueAtBeforeOrderByCreatedAtDesc(
+            GroupEntity group,
+            Collection<TaskStatus> statuses,
+            Instant dueAt,
+            Pageable pageable
+    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM TaskEntity t WHERE t.group = :group")
@@ -50,8 +113,8 @@ public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
       )
 """)
     List<TaskEntity> findTasksDueSoonNotNotified(
-            @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to,
+            @Param("from") Instant from,
+            @Param("to") Instant to,
             @Param("type") NotificationType type
     );
 

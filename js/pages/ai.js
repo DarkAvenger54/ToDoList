@@ -5,6 +5,7 @@ import {
   showToast,
   formatDateTime,
   promptDialog,
+  toUtcIso,
 } from "../ui.js";
 
 let isThinking = false;
@@ -155,7 +156,7 @@ function renderSuggestions(data, scope, groupId) {
           title: task.title,
           description: task.description || null,
           priority: task.priority || null,
-          dueAt: task.dueAtIso || null,
+          dueAt: toUtcIso(task.dueAtIso),
         },
       });
       showToast("Personal task created.", "success");
@@ -173,7 +174,7 @@ function renderSuggestions(data, scope, groupId) {
             title: task.title,
             description: task.description || null,
             priority: task.priority || null,
-            dueAt: task.dueAtIso || null,
+            dueAt: toUtcIso(task.dueAtIso),
           },
         });
         showToast("Group task created.", "success");
@@ -197,7 +198,7 @@ function renderSuggestions(data, scope, groupId) {
             title: task.title,
             description: task.description || null,
             priority: task.priority || null,
-            dueAt: task.dueAtIso || null,
+            dueAt: toUtcIso(task.dueAtIso),
             visibleInGroup: true,
           },
         });

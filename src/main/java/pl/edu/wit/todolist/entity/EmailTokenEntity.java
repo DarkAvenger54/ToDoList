@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.edu.wit.todolist.enums.EmailTokenType;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "email_tokens", indexes = {
@@ -35,11 +35,11 @@ public class EmailTokenEntity {
     private String targetEmail;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    private Instant expiresAt;
 
     @Column(nullable = false)
     private boolean used;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 }

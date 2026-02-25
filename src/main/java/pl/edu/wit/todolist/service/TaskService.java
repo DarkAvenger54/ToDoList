@@ -11,10 +11,14 @@ import pl.edu.wit.todolist.dto.task.TaskResponseDto;
 import pl.edu.wit.todolist.dto.task.TaskUpdateRequestDto;
 import pl.edu.wit.todolist.entity.TaskEntity;
 import pl.edu.wit.todolist.entity.UserEntity;
+import pl.edu.wit.todolist.enums.TaskFilter;
 import pl.edu.wit.todolist.enums.TaskScope;
 import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.repository.TaskRepository;
 import pl.edu.wit.todolist.repository.UserRepository;
+
+import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,11 +27,20 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
+    private static final List<TaskStatus> UNFINISHED_STATUSES =
+            List.of(TaskStatus.TODO, TaskStatus.IN_PROGRESS);
+
     private UserEntity currentUser(Authentication auth) {
         return userRepository.findByUsername(auth.getName()).orElseThrow();
     }
 
-    private TaskResponseDto toDto(TaskEntity t, String currentUsername) {
+    private boolean isOverdue(TaskEntity t, Instant now) {
+        if (t.getDueAt() == null) return false;
+        if (!t.getDueAt().isBefore(now)) return false;
+        return t.getStatus() == TaskStatus.TODO || t.getStatus() == TaskStatus.IN_PROGRESS;
+    }
+
+    private TaskResponseDto toDto(TaskEntity t, String currentUsername, Instant now) {
         String creatorDisplay = (t.getCreator() != null && t.getCreator().getUsername().equals(currentUsername))
                 ? "you"
                 : (t.getCreator() != null ? t.getCreator().getUsername() : null);
@@ -47,7 +60,8 @@ public class TaskService {
                 t.getGroup() != null ? t.getGroup().getName() : null,
                 t.getOwner() != null ? t.getOwner().getUsername() : null,
                 t.isGroupTask(),
-                t.isVisibleInGroup()
+                t.isVisibleInGroup(),
+                isOverdue(t, now)
         );
     }
 
@@ -70,19 +84,45 @@ public class TaskService {
                 .status(TaskStatus.TODO)
                 .build();
 
-        return toDto(taskRepository.save(task), currentUsername);
+        return toDto(taskRepository.save(task), currentUsername, Instant.now());
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskResponseDto> list(Authentication auth, TaskStatus status, Pageable pageable) {
+    public Page<TaskResponseDto> list(Authentication auth, TaskFilter filter, TaskStatus status, Pageable pageable) {
         UserEntity user = currentUser(auth);
         String currentUsername = auth.getName();
+        Instant now = Instant.now();
 
-        Page<TaskEntity> page = (status == null)
-                ? taskRepository.findAllByOwnerAndScope(user, TaskScope.PERSONAL, pageable)
-                : taskRepository.findAllByOwnerAndScopeAndStatus(user, TaskScope.PERSONAL, status, pageable);
+        if (filter == null && status != null) {
+            return taskRepository.findAllByOwnerAndScopeAndStatus(user, TaskScope.PERSONAL, status, pageable)
+                    .map(t -> toDto(t, currentUsername, now));
+        }
 
-        return page.map(t -> toDto(t, currentUsername));
+        TaskFilter resolved = filter != null ? filter : TaskFilter.ALL;
+        Page<TaskEntity> page = switch (resolved) {
+            case ALL -> taskRepository.findAllByOwnerAndScope(user, TaskScope.PERSONAL, pageable);
+            case UNFINISHED -> taskRepository.findAllByOwnerAndScopeAndStatusIn(
+                    user,
+                    TaskScope.PERSONAL,
+                    UNFINISHED_STATUSES,
+                    pageable
+            );
+            case COMPLETED -> taskRepository.findAllByOwnerAndScopeAndStatus(
+                    user,
+                    TaskScope.PERSONAL,
+                    TaskStatus.DONE,
+                    pageable
+            );
+            case OVERDUE -> taskRepository.findAllByOwnerAndScopeAndStatusInAndDueAtIsNotNullAndDueAtBefore(
+                    user,
+                    TaskScope.PERSONAL,
+                    UNFINISHED_STATUSES,
+                    now,
+                    pageable
+            );
+        };
+
+        return page.map(t -> toDto(t, currentUsername, now));
     }
 
     @Transactional(readOnly = true)
@@ -91,7 +131,7 @@ public class TaskService {
         String currentUsername = auth.getName();
 
         TaskEntity t = taskRepository.findByIdAndOwner(id, user).orElseThrow();
-        return toDto(t, currentUsername);
+        return toDto(t, currentUsername, Instant.now());
     }
 
     @Transactional
@@ -112,7 +152,7 @@ public class TaskService {
             t.setDueAt(dto.dueAt());
         }
 
-        return toDto(t, currentUsername);
+        return toDto(t, currentUsername, Instant.now());
     }
 
     @Transactional

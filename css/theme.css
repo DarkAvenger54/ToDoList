@@ -33,6 +33,12 @@
   --chip-bg: rgba(42, 107, 244, 0.12);
   --chip-text: #1a4cd1;
   --focus: rgba(42, 107, 244, 0.35);
+  --status-pending-bg: rgba(90, 99, 114, 0.16);
+  --status-pending-text: #44505f;
+  --status-complete-bg: rgba(46, 125, 50, 0.18);
+  --status-complete-text: #1f6b3a;
+  --status-overdue-bg: rgba(229, 72, 77, 0.18);
+  --status-overdue-text: #b42318;
 }
 
 [data-theme="dark"] {
@@ -63,4 +69,10 @@
   --chip-bg: rgba(121, 166, 255, 0.18);
   --chip-text: #cfe0ff;
   --focus: rgba(121, 166, 255, 0.4);
+  --status-pending-bg: rgba(154, 164, 178, 0.2);
+  --status-pending-text: #c1c9d6;
+  --status-complete-bg: rgba(123, 216, 143, 0.2);
+  --status-complete-text: #c6f1cf;
+  --status-overdue-bg: rgba(255, 123, 127, 0.2);
+  --status-overdue-text: #ffd1d4;
 }

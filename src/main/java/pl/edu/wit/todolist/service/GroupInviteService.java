@@ -14,7 +14,7 @@ import pl.edu.wit.todolist.repository.GroupMemberRepository;
 import pl.edu.wit.todolist.repository.GroupRepository;
 import pl.edu.wit.todolist.repository.UserRepository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -111,7 +111,7 @@ public class GroupInviteService {
         }
 
         invite.setStatus(GroupInviteStatus.ACCEPTED);
-        invite.setRespondedAt(LocalDateTime.now());
+        invite.setRespondedAt(Instant.now());
 
         notificationService.notifyUser(
                 invite.getInviter(),
@@ -136,7 +136,7 @@ public class GroupInviteService {
         }
 
         invite.setStatus(GroupInviteStatus.REJECTED);
-        invite.setRespondedAt(LocalDateTime.now());
+        invite.setRespondedAt(Instant.now());
 
         notificationService.notifyUser(
                 invite.getInviter(),

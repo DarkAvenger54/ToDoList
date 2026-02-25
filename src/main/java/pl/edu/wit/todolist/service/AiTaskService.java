@@ -12,7 +12,7 @@ import pl.edu.wit.todolist.dto.ai.AiTaskSuggestRequestDto;
 import pl.edu.wit.todolist.dto.ai.AiTaskSuggestionList;
 import pl.edu.wit.todolist.enums.TaskScope;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class AiTaskService {
         int maxTasks = (req.maxTasks() == null || req.maxTasks() <= 0) ? 5 : Math.min(req.maxTasks(), 15);
         TaskScope scope = (req.scope() == null) ? TaskScope.PERSONAL : req.scope();
 
-        String now = LocalDateTime.now().toString();
+        String now = Instant.now().toString();
 
         String system = """
                 You are an assistant that converts a user's natural-language command into a small list of ToDo tasks.
@@ -35,7 +35,7 @@ public class AiTaskService {
                 - Produce %d tasks maximum.
                 - title <= 140 chars, description <= 4000 chars.
                 - priority must be one of LOW, MEDIUM, HIGH, URGENT (default MEDIUM if unclear).
-                - dueAtIso: ISO-8601 local datetime like 2026-02-05T18:00, or empty string if missing.
+                - dueAtIso: ISO-8601 UTC datetime like 2026-02-05T18:00:00Z, or empty string if missing.
                 - Language: keep titles/descriptions in the same language as the user's command.
                 Current server time: %s
                 Scope: %s

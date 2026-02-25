@@ -221,6 +221,12 @@
                   <option value="CANCELLED">CANCELLED</option>
                 </select>
               </div>
+              <div class="input-group">
+                <label class="checkbox-inline" for="tasks-overdue-only">
+                  <input id="tasks-overdue-only" type="checkbox" />
+                  Overdue only
+                </label>
+              </div>
             </div>
           </div>
           <div id="tasks-list" class="list"></div>
@@ -410,6 +416,26 @@
                   Only group admins can create tasks.
                 </div>
                 <div id="group-tasks-section">
+                  <div class="panel">
+                    <div class="form-row">
+                      <div class="input-group">
+                        <label for="group-tasks-filter">Filter by status</label>
+                        <select id="group-tasks-filter" class="select">
+                          <option value="">All</option>
+                          <option value="TODO">TODO</option>
+                          <option value="IN_PROGRESS">IN PROGRESS</option>
+                          <option value="DONE">DONE</option>
+                          <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                      </div>
+                      <div class="input-group">
+                        <label class="checkbox-inline" for="group-overdue-only">
+                          <input id="group-overdue-only" type="checkbox" />
+                          Overdue only
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                   <div id="group-tasks-list" class="list"></div>
                   <div id="group-tasks-pagination" class="pagination"></div>
                 </div>

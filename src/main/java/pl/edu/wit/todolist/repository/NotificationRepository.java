@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import pl.edu.wit.todolist.entity.NotificationEntity;
 import pl.edu.wit.todolist.entity.UserEntity;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
 
@@ -18,5 +18,5 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     long deleteByUserAndReadTrue(UserEntity user);
 
-    void deleteAllByUserAndCreatedAtBefore(UserEntity user, LocalDateTime before);
+    void deleteAllByUserAndCreatedAtBefore(UserEntity user, Instant before);
 }

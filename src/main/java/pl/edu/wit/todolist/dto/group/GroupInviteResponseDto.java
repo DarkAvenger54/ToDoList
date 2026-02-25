@@ -2,7 +2,7 @@ package pl.edu.wit.todolist.dto.group;
 
 import pl.edu.wit.todolist.enums.GroupInviteStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record GroupInviteResponseDto(
         Long id,
@@ -10,5 +10,5 @@ public record GroupInviteResponseDto(
         String groupName,
         String inviterUsername,
         GroupInviteStatus status,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {}

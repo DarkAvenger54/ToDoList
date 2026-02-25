@@ -11,6 +11,7 @@ import {
   renderPagination,
   formatDateTime,
   toInputDateTime,
+  toUtcIso,
 } from "../ui.js";
 
 const pageSize = 10;
@@ -20,6 +21,15 @@ let lastPage = 0;
 let editingTaskId = null;
 
 export function initGroupDetail() {
+  const filter = qs("#group-tasks-filter");
+  if (filter) {
+    filter.addEventListener("change", () => loadGroupTasks(0));
+  }
+  const overdueOnly = qs("#group-overdue-only");
+  if (overdueOnly) {
+    overdueOnly.addEventListener("change", () => loadGroupTasks(0));
+  }
+
   qsa("[data-group-tab]").forEach((button) => {
     button.addEventListener("click", () => {
       currentTab = button.dataset.groupTab;
@@ -109,7 +119,7 @@ export function initGroupDetail() {
       const description = descriptionValue ? descriptionValue : null;
       const priority = qs("#group-assign-priority").value || null;
       const dueAtValue = qs("#group-assign-dueAt").value;
-      const dueAt = dueAtValue || null;
+      const dueAt = toUtcIso(dueAtValue);
       const visibleInGroup = qs("#group-assign-visible").checked;
       if (!assigneeUsername || !title) {
         showToast("Assignee and title are required.", "error");
@@ -141,7 +151,7 @@ export function initGroupDetail() {
       const description = descriptionValue ? descriptionValue : null;
       const priority = qs("#group-forall-priority").value || null;
       const dueAtValue = qs("#group-forall-dueAt").value;
-      const dueAt = dueAtValue || null;
+      const dueAt = toUtcIso(dueAtValue);
       if (!title) {
         showToast("Title is required.", "error");
         return;
@@ -395,15 +405,21 @@ async function loadGroupTasks(page = 0) {
     visible: "visible",
   };
   const endpoint = endpointMap[currentTab] || "mine";
+  const filter = qs("#group-tasks-filter");
+  const status = filter?.value || "";
+  const overdueOnly = qs("#group-overdue-only")?.checked;
   const params = new URLSearchParams({
     page: `${page}`,
     size: `${pageSize}`,
   });
+  if (status) params.append("status", status);
   const data = await apiFetch(
     `/api/groups/${currentGroupId}/tasks/${endpoint}?${params.toString()}`
   );
   lastPage = data.number ?? 0;
-  renderGroupTasks(data.content || []);
+  const tasks = data.content || [];
+  const filtered = overdueOnly ? tasks.filter((task) => task.overdue === true) : tasks;
+  renderGroupTasks(filtered);
   renderPagination(qs("#group-tasks-pagination"), data, loadGroupTasks);
 }
 
@@ -420,11 +436,12 @@ function renderGroupTasks(tasks) {
   tasks.forEach((task) => {
     const card = document.createElement("div");
     card.className = "card task-card";
-    const isOverdue =
-      task.dueAt &&
-      new Date(task.dueAt) < new Date() &&
-      !["DONE", "CANCELLED"].includes(task.status);
-    if (isOverdue) card.classList.add("overdue");
+    const isOverdue = task.overdue === true;
+    if (isOverdue && task.status !== "DONE") {
+      card.classList.add("overdue");
+    } else if (task.status === "DONE") {
+      card.classList.add("completed");
+    }
 
     const title = document.createElement("h3");
     title.textContent = task.title;
@@ -442,6 +459,13 @@ function renderGroupTasks(tasks) {
     priorityChip.textContent = task.priority || "NONE";
     meta.append(statusChip, priorityChip);
 
+    if (isOverdue && task.status !== "DONE") {
+      const overdue = document.createElement("span");
+      overdue.className = "chip overdue";
+      overdue.textContent = "OVERDUE";
+      meta.appendChild(overdue);
+    }
+
     if (task.assigneeUsername) {
       const assignee = document.createElement("span");
       assignee.textContent = `Assignee: ${task.assigneeUsername}`;
@@ -457,7 +481,12 @@ function renderGroupTasks(tasks) {
     const actions = document.createElement("div");
     actions.className = "inline-actions";
 
-    if (task.groupTask) {
+    const manageGroup = canManage(getCurrentGroup());
+    const canUpdateStatus =
+      manageGroup ||
+      (task.assigneeUsername && task.assigneeUsername === state.username);
+
+    if (canUpdateStatus) {
       const statusGroup = document.createElement("div");
       statusGroup.className = "segmented";
       ["TODO", "IN_PROGRESS", "DONE", "CANCELLED"].forEach((status) => {
@@ -473,7 +502,6 @@ function renderGroupTasks(tasks) {
       actions.appendChild(statusGroup);
     }
 
-    const manageGroup = canManage(getCurrentGroup());
     if (manageGroup) {
       const edit = document.createElement("button");
       edit.className = "button small";
@@ -515,7 +543,7 @@ async function handleGroupTaskSubmit(event) {
   const status = qs("#group-task-status").value || null;
   const priority = qs("#group-task-priority").value || null;
   const dueAtValue = qs("#group-task-dueAt").value;
-  const dueAt = dueAtValue || null;
+  const dueAt = toUtcIso(dueAtValue);
   const clearDueAt = qs("#group-task-clear-due").checked;
   const visibleInGroup = qs("#group-task-visible").checked;
 

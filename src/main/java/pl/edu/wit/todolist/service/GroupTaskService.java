@@ -13,9 +13,14 @@ import pl.edu.wit.todolist.dto.group.GroupTaskUpdateStatusRequestDto;
 import pl.edu.wit.todolist.dto.task.TaskResponseDto;
 import pl.edu.wit.todolist.entity.*;
 import pl.edu.wit.todolist.enums.NotificationType;
+import pl.edu.wit.todolist.enums.GroupRole;
+import pl.edu.wit.todolist.enums.TaskFilter;
 import pl.edu.wit.todolist.enums.TaskScope;
 import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.repository.*;
+
+import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +34,16 @@ public class GroupTaskService {
     private final GroupPermissionService perm;
     private final NotificationService notificationService;
 
-    private TaskResponseDto toDto(TaskEntity t, String currentUsername) {
+    private static final List<TaskStatus> UNFINISHED_STATUSES =
+            List.of(TaskStatus.TODO, TaskStatus.IN_PROGRESS);
+
+    private boolean isOverdue(TaskEntity t, Instant now) {
+        if (t.getDueAt() == null) return false;
+        if (!t.getDueAt().isBefore(now)) return false;
+        return t.getStatus() == TaskStatus.TODO || t.getStatus() == TaskStatus.IN_PROGRESS;
+    }
+
+    private TaskResponseDto toDto(TaskEntity t, String currentUsername, Instant now) {
         String creatorDisplay = (t.getCreator() != null && t.getCreator().getUsername().equals(currentUsername))
                 ? "you"
                 : (t.getCreator() != null ? t.getCreator().getUsername() : null);
@@ -49,7 +63,8 @@ public class GroupTaskService {
                 t.getGroup() != null ? t.getGroup().getName() : null,
                 t.getOwner() != null ? t.getOwner().getUsername() : null,
                 t.isGroupTask(),
-                t.isVisibleInGroup()
+                t.isVisibleInGroup(),
+                isOverdue(t, now)
         );
     }
 
@@ -88,7 +103,7 @@ public class GroupTaskService {
                 true
         );
 
-        return toDto(saved, me.getUsername());
+        return toDto(saved, me.getUsername(), Instant.now());
     }
 
     @Transactional
@@ -124,56 +139,121 @@ public class GroupTaskService {
             );
         }
 
-        return toDto(saved, me.getUsername());
+        return toDto(saved, me.getUsername(), Instant.now());
     }
 
     @Transactional
     public void updateGroupTaskStatus(Authentication auth, Long groupId, Long taskId, GroupTaskUpdateStatusRequestDto dto) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
         UserEntity me = perm.currentUser(auth);
-        perm.requireAdminOrOwner(g, me);
+        GroupMemberEntity member = perm.requireMember(g, me);
 
         TaskEntity task = taskRepository.findById(taskId).orElseThrow();
         if (task.getGroup() == null
                 || !task.getGroup().getId().equals(g.getId())
-                || !task.isGroupTask()) {
+                || task.getScope() != TaskScope.GROUP) {
             throw new IllegalArgumentException("Not a group task of this group");
+        }
+
+        boolean isAdminOrOwner = member.getRole() == GroupRole.ADMIN || member.getRole() == GroupRole.OWNER;
+        boolean isAssignee = task.getOwner() != null && task.getOwner().getId().equals(me.getId());
+        if (!isAdminOrOwner && !isAssignee) {
+            throw new SecurityException("Not allowed to update this task");
         }
 
         task.setStatus(dto.status());
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskResponseDto> mine(Authentication auth, Long groupId, Pageable pageable) {
+    public Page<TaskResponseDto> mine(Authentication auth, Long groupId, TaskFilter filter, TaskStatus status, Pageable pageable) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
         UserEntity me = perm.currentUser(auth);
         perm.requireMember(g, me);
+        Instant now = Instant.now();
 
-        Page<TaskEntity> assigned = taskRepository.findAllByGroupAndOwnerAndScopeOrderByCreatedAtDesc(
-                g, me, TaskScope.GROUP, pageable
-        );
+        if (filter == null && status != null) {
+            return taskRepository.findAllByGroupAndOwnerAndScopeAndStatusOrderByCreatedAtDesc(
+                    g, me, TaskScope.GROUP, status, pageable
+            ).map(t -> toDto(t, me.getUsername(), now));
+        }
 
-        return assigned.map(t -> toDto(t, me.getUsername()));
+        TaskFilter resolved = filter != null ? filter : TaskFilter.ALL;
+        Page<TaskEntity> assigned = switch (resolved) {
+            case ALL -> taskRepository.findAllByGroupAndOwnerAndScopeOrderByCreatedAtDesc(
+                    g, me, TaskScope.GROUP, pageable
+            );
+            case UNFINISHED -> taskRepository.findAllByGroupAndOwnerAndScopeAndStatusInOrderByCreatedAtDesc(
+                    g, me, TaskScope.GROUP, UNFINISHED_STATUSES, pageable
+            );
+            case COMPLETED -> taskRepository.findAllByGroupAndOwnerAndScopeAndStatusOrderByCreatedAtDesc(
+                    g, me, TaskScope.GROUP, TaskStatus.DONE, pageable
+            );
+            case OVERDUE -> taskRepository.findAllByGroupAndOwnerAndScopeAndStatusInAndDueAtIsNotNullAndDueAtBeforeOrderByCreatedAtDesc(
+                    g, me, TaskScope.GROUP, UNFINISHED_STATUSES, now, pageable
+            );
+        };
+
+        return assigned.map(t -> toDto(t, me.getUsername(), now));
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskResponseDto> forAll(Authentication auth, Long groupId, Pageable pageable) {
+    public Page<TaskResponseDto> forAll(Authentication auth, Long groupId, TaskFilter filter, TaskStatus status, Pageable pageable) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
         UserEntity me = perm.currentUser(auth);
         perm.requireMember(g, me);
+        Instant now = Instant.now();
 
-        return taskRepository.findAllByGroupAndGroupTaskTrueOrderByCreatedAtDesc(g, pageable)
-                .map(t -> toDto(t, me.getUsername()));
+        if (filter == null && status != null) {
+            return taskRepository.findAllByGroupAndGroupTaskTrueAndStatusOrderByCreatedAtDesc(
+                    g, status, pageable
+            ).map(t -> toDto(t, me.getUsername(), now));
+        }
+
+        TaskFilter resolved = filter != null ? filter : TaskFilter.ALL;
+        Page<TaskEntity> page = switch (resolved) {
+            case ALL -> taskRepository.findAllByGroupAndGroupTaskTrueOrderByCreatedAtDesc(g, pageable);
+            case UNFINISHED -> taskRepository.findAllByGroupAndGroupTaskTrueAndStatusInOrderByCreatedAtDesc(
+                    g, UNFINISHED_STATUSES, pageable
+            );
+            case COMPLETED -> taskRepository.findAllByGroupAndGroupTaskTrueAndStatusOrderByCreatedAtDesc(
+                    g, TaskStatus.DONE, pageable
+            );
+            case OVERDUE -> taskRepository.findAllByGroupAndGroupTaskTrueAndStatusInAndDueAtIsNotNullAndDueAtBeforeOrderByCreatedAtDesc(
+                    g, UNFINISHED_STATUSES, now, pageable
+            );
+        };
+
+        return page.map(t -> toDto(t, me.getUsername(), now));
     }
 
     @Transactional(readOnly = true)
-    public Page<TaskResponseDto> visible(Authentication auth, Long groupId, Pageable pageable) {
+    public Page<TaskResponseDto> visible(Authentication auth, Long groupId, TaskFilter filter, TaskStatus status, Pageable pageable) {
         GroupEntity g = groupRepository.findById(groupId).orElseThrow();
         UserEntity me = perm.currentUser(auth);
         perm.requireMember(g, me);
+        Instant now = Instant.now();
 
-        return taskRepository.findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(g, pageable)
-                .map(t -> toDto(t, me.getUsername()));
+        if (filter == null && status != null) {
+            return taskRepository.findAllByGroupAndVisibleInGroupTrueAndStatusOrderByCreatedAtDesc(
+                    g, status, pageable
+            ).map(t -> toDto(t, me.getUsername(), now));
+        }
+
+        TaskFilter resolved = filter != null ? filter : TaskFilter.ALL;
+        Page<TaskEntity> page = switch (resolved) {
+            case ALL -> taskRepository.findAllByGroupAndVisibleInGroupTrueOrderByCreatedAtDesc(g, pageable);
+            case UNFINISHED -> taskRepository.findAllByGroupAndVisibleInGroupTrueAndStatusInOrderByCreatedAtDesc(
+                    g, UNFINISHED_STATUSES, pageable
+            );
+            case COMPLETED -> taskRepository.findAllByGroupAndVisibleInGroupTrueAndStatusOrderByCreatedAtDesc(
+                    g, TaskStatus.DONE, pageable
+            );
+            case OVERDUE -> taskRepository.findAllByGroupAndVisibleInGroupTrueAndStatusInAndDueAtIsNotNullAndDueAtBeforeOrderByCreatedAtDesc(
+                    g, UNFINISHED_STATUSES, now, pageable
+            );
+        };
+
+        return page.map(t -> toDto(t, me.getUsername(), now));
     }
     @Transactional
     public TaskResponseDto updateGroupTask(Authentication auth, Long groupId, Long taskId, GroupTaskUpdateRequestDto dto) {
@@ -205,7 +285,7 @@ public class GroupTaskService {
             t.setVisibleInGroup(dto.visibleInGroup());
         }
 
-        return toDto(t, me.getUsername());
+        return toDto(t, me.getUsername(), Instant.now());
     }
 
     @Transactional

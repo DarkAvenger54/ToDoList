@@ -12,7 +12,7 @@ import pl.edu.wit.todolist.enums.NotificationType;
 import pl.edu.wit.todolist.repository.FriendshipRepository;
 import pl.edu.wit.todolist.repository.UserRepository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -48,7 +48,7 @@ public class FriendshipService {
                 .requester(requester)
                 .addressee(addressee)
                 .status(FriendshipStatus.PENDING)
-                .createdAt(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .build();
 
         friendshipRepository.save(friendship);

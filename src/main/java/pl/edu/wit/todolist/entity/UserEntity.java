@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,7 +51,7 @@ public class UserEntity {
     private boolean emailVerified;
 
     @Column
-    private LocalDateTime lastEmailConfirmationSentAt;
+    private Instant lastEmailConfirmationSentAt;
 
     @PrePersist
     @PreUpdate

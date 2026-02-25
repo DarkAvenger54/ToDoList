@@ -10,7 +10,7 @@ import pl.edu.wit.todolist.repository.EmailTokenRepository;
 import pl.edu.wit.todolist.repository.UserRepository;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +35,8 @@ public class EmailConfirmationService {
         if (user == null) return;
         if (user.isEmailVerified()) return;
 
-        LocalDateTime last = user.getLastEmailConfirmationSentAt();
-        if (last != null && last.plusSeconds(resendCooldownSeconds).isAfter(LocalDateTime.now())) {
+        Instant last = user.getLastEmailConfirmationSentAt();
+        if (last != null && last.plusSeconds(resendCooldownSeconds).isAfter(Instant.now())) {
             return;
         }
 
@@ -52,7 +52,7 @@ public class EmailConfirmationService {
         String link = frontendBaseUrl + "/confirm-email.html?token=" + pair.rawToken();
         emailService.sendEmailConfirmation(user.getEmail(), link);
 
-        user.setLastEmailConfirmationSentAt(LocalDateTime.now());
+        user.setLastEmailConfirmationSentAt(Instant.now());
         userRepository.save(user);
     }
 

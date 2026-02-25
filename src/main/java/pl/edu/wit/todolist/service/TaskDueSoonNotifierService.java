@@ -9,7 +9,8 @@ import pl.edu.wit.todolist.entity.TaskEntity;
 import pl.edu.wit.todolist.enums.NotificationType;
 import pl.edu.wit.todolist.repository.TaskRepository;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -28,17 +29,17 @@ public class TaskDueSoonNotifierService {
     @Scheduled(fixedDelayString = "${app.notifications.due-soon.poll-ms:60000}")
     @Transactional
     public void notifyDueSoonTasks() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         notifyDueSoonWindow(now, dueSoonMinutes, NotificationType.TASK_DUE_SOON);
         notifyDueSoonWindow(now, dueSoonMinutesSecondary, NotificationType.TASK_DUE_SOON_5);
     }
 
-    private void notifyDueSoonWindow(LocalDateTime now, long minutes, NotificationType type) {
+    private void notifyDueSoonWindow(Instant now, long minutes, NotificationType type) {
         if (minutes <= 0) {
             return;
         }
-        LocalDateTime to = now.plusMinutes(minutes);
+        Instant to = now.plus(Duration.ofMinutes(minutes));
 
         List<TaskEntity> tasks = taskRepository.findTasksDueSoonNotNotified(
                 now, to, type

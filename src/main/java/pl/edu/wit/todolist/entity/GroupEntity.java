@@ -3,7 +3,7 @@ package pl.edu.wit.todolist.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "groups", indexes = {
@@ -25,11 +25,11 @@ public class GroupEntity {
     private UserEntity owner;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @PrePersist
     void prePersist() {
         if (name != null) name = name.trim();
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 }

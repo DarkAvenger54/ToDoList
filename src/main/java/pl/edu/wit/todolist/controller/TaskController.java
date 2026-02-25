@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.edu.wit.todolist.dto.task.TaskCreateRequestDto;
 import pl.edu.wit.todolist.dto.task.TaskResponseDto;
 import pl.edu.wit.todolist.dto.task.TaskUpdateRequestDto;
+import pl.edu.wit.todolist.enums.TaskFilter;
 import pl.edu.wit.todolist.enums.TaskStatus;
 import pl.edu.wit.todolist.service.TaskService;
 
@@ -28,11 +29,12 @@ public class TaskController {
 
     @GetMapping
     public Page<TaskResponseDto> list(
+            @RequestParam(required = false) TaskFilter filter,
             @RequestParam(required = false) TaskStatus status,
             @ParameterObject Pageable pageable,
             Authentication auth
     ) {
-        return taskService.list(auth, status, pageable);
+        return taskService.list(auth, filter, status, pageable);
     }
 
     @GetMapping("/{id}")

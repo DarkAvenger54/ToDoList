@@ -11,7 +11,7 @@ import pl.edu.wit.todolist.repository.EmailTokenRepository;
 
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Base64;
 
 @Service
@@ -32,9 +32,9 @@ public class EmailTokenService {
                 .type(type)
                 .user(user)
                 .targetEmail(targetEmail)
-                .expiresAt(LocalDateTime.now().plus(ttl))
+                .expiresAt(Instant.now().plus(ttl))
                 .used(false)
-                .createdAt(LocalDateTime.now())
+                .createdAt(Instant.now())
                 .build();
 
         return new TokenPair(raw, repository.save(token));
@@ -52,7 +52,7 @@ public class EmailTokenService {
                 .orElseThrow(() -> new InvalidEmailTokenException("Invalid token"));
 
         if (t.isUsed()) throw new InvalidEmailTokenException("Token already used");
-        if (t.getExpiresAt().isBefore(LocalDateTime.now()))
+        if (t.getExpiresAt().isBefore(Instant.now()))
             throw new InvalidEmailTokenException("Token expired");
         if (t.getType() != type)
             throw new InvalidEmailTokenException("Invalid token type");
