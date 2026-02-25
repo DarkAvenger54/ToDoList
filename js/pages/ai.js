@@ -46,6 +46,8 @@ export function initAI() {
       setAiThinking(true);
       isThinking = true;
       try {
+        const timezone =
+          Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
         const data = await apiFetch("/api/ai/tasks/suggest", {
           method: "POST",
           body: {
@@ -53,6 +55,7 @@ export function initAI() {
             scope: scope || null,
             groupId,
             maxTasks,
+            timezone,
           },
         });
         renderSuggestions(data, scope, groupId);

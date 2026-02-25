@@ -12,7 +12,11 @@ import pl.edu.wit.todolist.dto.ai.AiTaskSuggestRequestDto;
 import pl.edu.wit.todolist.dto.ai.AiTaskSuggestionList;
 import pl.edu.wit.todolist.enums.TaskScope;
 
+import java.time.DateTimeException;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +29,20 @@ public class AiTaskService {
         int maxTasks = (req.maxTasks() == null || req.maxTasks() <= 0) ? 5 : Math.min(req.maxTasks(), 15);
         TaskScope scope = (req.scope() == null) ? TaskScope.PERSONAL : req.scope();
 
-        String now = Instant.now().toString();
+        String timezone = (req.timezone() == null || req.timezone().isBlank())
+                ? "UTC"
+                : req.timezone().trim();
+        ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(timezone);
+        } catch (DateTimeException ex) {
+            zoneId = ZoneOffset.UTC;
+            timezone = "UTC";
+        }
+
+        Instant nowUtc = Instant.now();
+        String userNow = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(nowUtc.atZone(zoneId));
+        String utcNow = nowUtc.toString();
 
         String system = """
                 You are an assistant that converts a user's natural-language command into a small list of ToDo tasks.
@@ -37,9 +54,11 @@ public class AiTaskService {
                 - priority must be one of LOW, MEDIUM, HIGH, URGENT (default MEDIUM if unclear).
                 - dueAtIso: ISO-8601 UTC datetime like 2026-02-05T18:00:00Z, or empty string if missing.
                 - Language: keep titles/descriptions in the same language as the user's command.
-                Current server time: %s
+                User timezone: %s
+                Current time in user's timezone: %s
+                Current UTC time: %s
                 Scope: %s
-                """.formatted(maxTasks, now, scope.name());
+                """.formatted(maxTasks, timezone, userNow, utcNow, scope.name());
 
         String user = "Command: " + req.command();
 

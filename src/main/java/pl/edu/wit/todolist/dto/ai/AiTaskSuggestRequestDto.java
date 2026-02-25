@@ -8,5 +8,6 @@ public record AiTaskSuggestRequestDto(
         @NotBlank @Size(max = 2000) String command,
         TaskScope scope,
         Long groupId,
-        Integer maxTasks
+        Integer maxTasks,
+        String timezone
 ) {}

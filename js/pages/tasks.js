@@ -16,6 +16,7 @@ import {
 let editingTaskId = null;
 let lastPage = 0;
 const pageSize = 10;
+let autoRefreshTimer = null;
 
 export function initTasks() {
   const filter = qs("#tasks-filter");
@@ -70,6 +71,15 @@ export function initTasks() {
         }
       }
     });
+  }
+
+  if (!autoRefreshTimer) {
+    autoRefreshTimer = setInterval(() => {
+      const view = qs("#view-tasks");
+      if (!view || !view.classList.contains("active")) return;
+      if (!state.token) return;
+      loadTasks(lastPage);
+    }, 10000);
   }
 }
 
