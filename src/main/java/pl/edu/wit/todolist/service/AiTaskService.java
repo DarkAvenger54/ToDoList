@@ -65,8 +65,8 @@ public class AiTaskService {
         StructuredResponseCreateParams<AiTaskSuggestionList> params =
                 ResponseCreateParams.builder()
                         .model(ChatModel.of(aiProperties.model()))
-                        .instructions(system)   // <-- вместо InputItem.ofSystem
-                        .input(user)            // <-- вместо InputItem.ofUser
+                        .instructions(system)
+                        .input(user)
                         .maxOutputTokens(aiProperties.maxOutputTokens() == null ? 1600 : aiProperties.maxOutputTokens())
                         .text(AiTaskSuggestionList.class) // <-- включает structured outputs
                         .build();

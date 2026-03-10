@@ -47,13 +47,10 @@ public class GroupInviteService {
 
         UserEntity invitee = userRepository.findByUsername(username).orElseThrow();
 
-        // если уже участник — молча ничего
         if (groupMemberRepository.existsByGroupAndUser(group, invitee)) return;
 
-        // если уже есть pending invite — молча ничего
         if (inviteRepository.existsByGroupAndInviteeAndStatus(group, invitee, GroupInviteStatus.PENDING)) return;
 
-        // если был старый invite (accepted/rejected) — можно либо создать новый, либо обновить
         inviteRepository.findByGroupAndInvitee(group, invitee).ifPresent(inviteRepository::delete);
 
         GroupInviteEntity invite = GroupInviteEntity.builder()
@@ -99,7 +96,6 @@ public class GroupInviteService {
 
         GroupEntity group = invite.getGroup();
 
-        // создаем membership (если вдруг уже появился)
         if (!groupMemberRepository.existsByGroupAndUser(group, me)) {
             groupMemberRepository.save(
                     GroupMemberEntity.builder()
